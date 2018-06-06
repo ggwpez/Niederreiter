@@ -35,13 +35,20 @@ bgc_t::bgc_t(long dimenion, long non_root_points, long errors)
 		GF2X f_fix = *f;
 		SetCoeff(f_fix, deg(f_fix), GF2::zero());
 		f_fix.normalize();
-		gen = conv<GF2E>(f_fix);
+
+		L[0] = gen = conv<GF2E>(f_fix);
+
+		for (size_t i = 1; i < L.size() -1; ++i)
+			L[i] = L[i -1] *gen;
+		L[L.size() -1] = 0;
+
+		/*gen = conv<GF2E>(f_fix);
 
 		for (size_t i = 0; i < L.size() -1; ++i)
 		{
 			L[i] = power(gen, i +1);
 		}
-		L[L.size() -1] = 0;
+		L[L.size() -1] = 0;*/
 	}
 
 	// Calculate Parity check matrix H

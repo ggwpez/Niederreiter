@@ -9,7 +9,7 @@
 #include <vector>
 
 NTL::GF2E call(NTL::GF2EX const& p, NTL::GF2E const& x);
-NTL::GF2E call_horner(NTL::GF2EX const& p, NTL::GF2E const& x);
+NTL::GF2E call_slow(NTL::GF2EX const& p, NTL::GF2E const& x);
 // Make Polynomial monic
 void monice(NTL::GF2EX& ret, NTL::GF2EX poly);
 NTL::GF2EX monice(NTL::GF2EX const&poly);

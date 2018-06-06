@@ -29,7 +29,7 @@ void niederreiter_keygen(bgc_t const& bgc, nr_pubkey_t& pub_key, nr_seckey_t& se
 
 	mat_GF2 H = bgc.H;//canonical_check_matrix(bgc);
 	compute_systematic_form(H, sInv, m, p);
-	std::cout << "H\n" << print(H) << "\nCompact_H\n" << print(m) << std::endl;
+	//std::cout << "H\n" << print(H) << "\nCompact_H\n" << print(m) << std::endl;
 
 	pub_key = nr_pubkey_t{ m };
 	sec_key = nr_seckey_t{ sInv, p };
@@ -37,8 +37,8 @@ void niederreiter_keygen(bgc_t const& bgc, nr_pubkey_t& pub_key, nr_seckey_t& se
 
 NTL::vec_GF2 niederreiter_encode(NTL::vec_GF2 const& msg, nr_pubkey_t const& pub)
 {
-	if (msg.length() != pub.h.NumRows() +pub.h.NumCols())
-		throw "lel";
+	/*if (msg.length() != pub.h.NumRows() +pub.h.NumCols())
+		throw "lel";*/
 
 	mat_GF2 H = mat_merge_ID_left(pub.h);
 
@@ -55,12 +55,13 @@ NTL::vec_GF2 niederreiter_decode(bgc_t const& bgc, NTL::vec_GF2 const& c, nr_sec
 
 int main(int, char**)
 {
+	SetSeed(ZZ(123456789));
 	assert(! test());
 	// Length
-	int const m = 10;		// 10
+	int const m = 13;		// 10
 	// Diemnsion
 	int const n = 1 << m;
-	int const t = 5;		// 9
+	int const t = 117;		// 9
 
 	bgc_t bgc(m, n, t);
 	std::cout << bgc.to_str() << std::endl;
@@ -69,17 +70,18 @@ int main(int, char**)
 	nr_seckey_t sec;
 	niederreiter_keygen(bgc, pub, sec);
 
-	for (int j = 0; j < 10; ++j)
+	//for (int j = 0; j < 10; ++j)
 	{
 		NTL::vec_GF2 msg;
 		msg.SetLength(n);
 		for (int i = 0; i < t; ++i)
-			msg[i +j] = GF2(1) -msg[i +j];
+			msg[i +(1 << (m -1))] = GF2(1);
 
 		auto cypher = niederreiter_encode(msg, pub);
 		auto recovered = niederreiter_decode(bgc, cypher, sec);
 
 		std::cout << "msg\n" << print(msg)
+				  << "\ncypher\n" << print(cypher)
 				  << "\nmsg'\n" << print(recovered) << '\n';
 
 		if (msg == recovered)

@@ -55,7 +55,7 @@ std::vector<GF2E> find_roots(const GF2EX& poly)	// TODO only support L needs to 
 	return roots;
 }
 
-GF2E call(GF2EX const& p, const GF2E& x)
+GF2E call_slow(GF2EX const& p, const GF2E& x)
 {
 	GF2E res = GF2E::zero();
 
@@ -86,7 +86,7 @@ mat_GF2 create_rand_permutation(size_t s)
 	return ret;
 }
 
-GF2E call_horner(const GF2EX& p, const GF2E& x)
+GF2E call(const GF2EX& p, const GF2E& x)
 {
 	GF2E result = LeadCoeff(p);
 

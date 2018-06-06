@@ -5,6 +5,7 @@
 #include <string>
 #include <sstream>
 #include <iomanip>
+#include <vector>
 
 std::string print_x_power(long i);
 std::string print(NTL::GF2 const&);
@@ -14,6 +15,17 @@ inline std::string print(size_t s)
 {
 	return std::to_string(s);
 }
+template<typename T>
+inline std::string print(std::vector<T> const& vec)
+{
+	std::stringstream ss;
+
+	for (long i = 0; i < vec.size(); ++i)
+		ss << print(vec[i]) << (i == vec.size() -1 ? "" : ",");
+
+	return ss.str();
+}
+
 template<typename T>
 inline std::string print(NTL::Vec<T> const& vec)
 {
