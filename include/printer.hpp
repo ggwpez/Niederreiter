@@ -44,9 +44,7 @@ inline std::string print(NTL::Mat<T> const& m)
 	for (int i = 0; i < m.NumRows(); ++i)
 	{
 		for (int j = 0; j < m.NumCols(); ++j)
-		{
-			ss << std::setw(4) << print(m.get(i, j)) << ' ';
-		}
+			ss << std::setw(1) << print(m.get(i, j)) << ' ';
 
 		ss << std::endl;
 	}

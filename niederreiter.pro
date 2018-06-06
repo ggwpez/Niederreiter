@@ -7,12 +7,16 @@ SOURCES += \
 	src/main.cpp \
 	src/bgc.cpp \
 	src/printer.cpp \
-	src/helper.cpp
+	src/helper.cpp \
+	src/tests.cpp \
+    src/rand.cpp
 
 HEADERS += \
 	include/bgc.hpp \
 	include/printer.hpp \
-	include/helper.hpp
+	include/helper.hpp \
+	include/tests.hpp \
+    include/rand.hpp
 
 QMAKE_CXXFLAGS += -std=c++17
 QMAKE_LIBS += -lntl -lgmp -lm -lpthread

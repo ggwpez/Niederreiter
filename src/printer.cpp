@@ -24,7 +24,7 @@ std::string print(NTL::GF2X const& p)
 	std::ostringstream ss;
 	bool place_plus = false;
 
-	for (int i = NTL::deg(p) +1; i --> 0;)
+	for (int i = NTL::deg(p); i --> 0;)
 	{
 		NTL::GF2 c = NTL::coeff(p, i);
 		if (place_plus && ! NTL::IsZero(c))
@@ -97,7 +97,7 @@ std::string print(NTL::GF2EX const& p)
 	std::ostringstream ss;
 	bool place_plus = false;
 
-	for (int i = NTL::deg(p) +1; i --> 0;)
+	for (int i = NTL::deg(p); i --> 0;)
 	{
 		NTL::GF2E c = NTL::coeff(p, i);
 		if (place_plus && ! NTL::IsZero(c))

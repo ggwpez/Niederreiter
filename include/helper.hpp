@@ -1,5 +1,6 @@
 #pragma once
 #include "printer.hpp"
+#include <NTL/mat_GF2.h>
 #include <NTL/GF2X.h>
 #include <NTL/GF2EX.h>
 #include <NTL/matrix.h>
@@ -8,30 +9,38 @@
 #include <vector>
 
 NTL::GF2E call(NTL::GF2EX const& p, NTL::GF2E const& x);
+NTL::GF2E call_horner(NTL::GF2EX const& p, NTL::GF2E const& x);
 // Make Polynomial monic
 void monice(NTL::GF2EX& ret, NTL::GF2EX poly);
 NTL::GF2EX monice(NTL::GF2EX const&poly);
 
-std::vector<NTL::GF2E> find_roots(NTL::GF2EX const&);
+NTL::mat_GF2 create_rand_permutation(size_t s);
 
-//template<typename NTL::GF2E>
-inline NTL::Mat<NTL::GF2> trace_construct(NTL::Mat<NTL::GF2E> const& m)
+void compute_systematic_form(NTL::mat_GF2 const& H, NTL::mat_GF2& sInv, NTL::mat_GF2& m, NTL::mat_GF2& p);
+NTL::mat_GF2 getLeftSubMatrix(NTL::mat_GF2 const& mat);
+NTL::mat_GF2 getRightSubMatrix(NTL::mat_GF2 const& mat);
+
+NTL::mat_GF2 mat_merge_colls(NTL::mat_GF2 const& a, NTL::mat_GF2 const& b);
+NTL::mat_GF2 mat_merge_ID_left(NTL::mat_GF2 const& b);
+NTL::mat_GF2 mat_merge_ID_right(NTL::mat_GF2 const& a);
+
+template<typename T>
+inline NTL::ZZ width(NTL::Vec<T> const& vec)
 {
-	NTL::Mat<NTL::GF2> ret;
-	long t = NTL::GF2E::modulus().n;
-	ret.SetDims(t *m.NumRows(), m.NumCols());
+	NTL::ZZ ret = NTL::ZZ::zero();
 
-	for (long row = 0; row < m.NumRows(); ++row)
-		for (long col = 0; col < m.NumCols(); ++col)
-		{
-			NTL::GF2X const& e = NTL::conv<NTL::GF2X>(m[row][col]);
-
-			for (long i = 0; i < t; ++i)	// < deg(e) TODO
-				ret.put(t *row +i, col, NTL::coeff(e, i));
-		}
+	for (long i = 0; i < vec.length(); ++i)
+		if (! NTL::IsZero(vec[i]))
+			++ret;
 
 	return ret;
 }
+
+std::vector<NTL::GF2E> find_roots(NTL::GF2EX const&);
+
+//template<typename NTL::GF2E>
+NTL::Mat<NTL::GF2> trace_construct(NTL::Mat<NTL::GF2E> const& m);
+NTL::Mat<NTL::GF2> trace_construct_2(NTL::Mat<NTL::GF2E> const& m);
 
 // FIXME: Please someone tell me how to do this better, its horrible!
 inline NTL::GF2E generate_GF2E(uint64_t i)
@@ -70,3 +79,5 @@ inline NTL::GF2EX calc_sigma(const NTL::GF2EX& a, const NTL::GF2EX& b, const NTL
 
 	return (G*G) +NTL::PowerXMod(1, g) *(C*C);
 }
+
+NTL::vec_GF2E to_ext_field_poly(const NTL::vec_GF2& vec, NTL::GF2X const& field);

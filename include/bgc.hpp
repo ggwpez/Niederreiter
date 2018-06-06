@@ -18,30 +18,31 @@ public:
 
 	// Vectors passed to encode() need to be k() in length
 	long k() const;
-	bool is_codeword(NTL::vec_GF2 const&);
+	bool is_codeword(NTL::vec_GF2 const&) const;
 	// Returns the number of elements of the Galois field
-	NTL::ZZ GF_order();
+	NTL::ZZ GF_order() const;
 
-	NTL::vec_GF2 encode(NTL::vec_GF2 const& msg);
-	NTL::vec_GF2 patterson_decode(const NTL::vec_GF2& c);
+	NTL::vec_GF2 encode(NTL::vec_GF2 const& msg) const;
+	NTL::vec_GF2 syndrom_decode(const NTL::vec_GF2& c) const;
+	NTL::vec_GF2 syndrom_decode_2(const NTL::vec_GF2& c) const;
+	NTL::GF2EX berlekamp_massey(const NTL::vec_GF2& c) const;
 
 	std::string to_str() const;
 
-	NTL::GF2EX sqr_root(NTL::GF2EX const& p);
+	NTL::GF2EX sqr_root(NTL::GF2EX const& p) const;
 
 	// Helper
-	NTL::GF2EX calculate_fi(long i);
+	NTL::GF2EX calculate_fi(long i) const;
 	// Syndrom function for code word c
-	NTL::GF2EX calculate_sc(const NTL::vec_GF2& c);
+	NTL::GF2EX calculate_sc(const NTL::vec_GF2& c) const;
 	// Feed with syndrom function
-	NTL::GF2EX calculate_vc(const NTL::GF2EX& sc);
-	NTL::GF2E calculate_sc_val(const NTL::vec_GF2& c);
+	NTL::GF2EX calculate_vc(const NTL::GF2EX& sc) const;
 	// Error locator polynom
-	NTL::GF2EX calculate_sigma(NTL::vec_GF2 e, long spare_i = -1);
-	NTL::GF2EX calculate_small_omega(NTL::vec_GF2 e);
+	NTL::GF2EX calculate_sigma(NTL::vec_GF2 e, long spare_i = -1) const;
+	NTL::GF2EX calculate_small_omega(NTL::vec_GF2 e) const;
 
 	std::vector<size_t> get_L_indices(std::vector<NTL::GF2E> const& l) const;
-	NTL::vec_GF2 calculate_error_vector(const std::vector<size_t>& L_indices);
+	NTL::vec_GF2 calculate_error_vector(const std::vector<size_t>& L_indices) const;
 
 
 	//NTL::GF2EX sth_root(NTL::GF2EX const& p, NTL::ZZ const& s);
@@ -51,9 +52,9 @@ public:
 	NTL::GF2E gen;
 	std::vector<NTL::GF2E> L;
 	// H* is the H from the amsterdam paper
-	NTL::mat_GF2E H, H_star;
-	NTL::mat_GF2 H_bin, H_star_bin,
-				 G,     G_star;
+	NTL::mat_GF2E XY, XYZ, YZ, YZ2;
+	NTL::mat_GF2 XY_bin, XYZ_bin, YZ_bin, Y2Z2_bin,
+				 G_XY,     G_XYZ;
 	std::unique_ptr<NTL::GF2X> f;
 	NTL::GF2EX id;
 };
