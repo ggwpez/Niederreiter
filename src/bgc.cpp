@@ -13,7 +13,7 @@
 
 using namespace NTL;
 
-bgc_t::bgc_t(long dimenion, long non_root_points, long errors, NTL::GF2X* supposed_f, NTL::GF2EX* supposed_g)
+bgc_t::bgc_t(long dimenion, long non_root_points, long errors)
 	: /*d, m*/ dimension(dimenion), /*n*/ non_root_points(non_root_points), /*t*/ errors(errors)
 {		// n k t
 	if (! ((2 <= errors) && (errors <= ((1l << dimenion) -1) /dimenion)))
@@ -23,17 +23,11 @@ bgc_t::bgc_t(long dimenion, long non_root_points, long errors, NTL::GF2X* suppos
 
 	// TODO check 2 <= errors <= (non_root_points -1) /dimension
 	// TODO needed?
-	if (supposed_f)
-		f = std::make_unique<GF2X>(*supposed_f);
-	else
-		f = std::make_unique<GF2X>(NTL::BuildIrred_GF2X(dimenion));	// irreducible polynome of degree 10 over GF(2)
+	f = std::make_unique<GF2X>(NTL::BuildIrred_GF2X(dimenion));	// irreducible polynome of degree 10 over GF(2)
 	GF2E::init(*f);
 	SetCoeff(id, 1);
 
-	if (supposed_g)
-		g = *supposed_g;
-	else
-		g = NTL::BuildIrred_GF2EX(errors);	// TODO not only binary Coefficients, otherwise attackable with Liodreau-Sendrier
+	g = NTL::BuildIrred_GF2EX(errors);	// TODO not only binary Coefficients, otherwise attackable with Liodreau-Sendrier
 
 	// Generate L
 	{
@@ -52,12 +46,28 @@ bgc_t::bgc_t(long dimenion, long non_root_points, long errors, NTL::GF2X* suppos
 
 	// Calculate Parity check matrix H
 	{
-		NTL::mat_GF2E X, Y, Y2, Z, Z2;
+		mat_GF2E YZ, h;
+		YZ.SetDims(errors, non_root_points);
+		h.SetDims(errors, non_root_points);
+
+		for (long j = 0; j < non_root_points; ++j)
+			YZ[0][j] = inv(call(g, L[j]));
+
+		for (long i = 1; i < errors; ++i)
+			for (long j = 0; j < non_root_points; ++j)
+				YZ[i][j] = YZ[i -1][j] *L[j];
+
+		for (int i = 0; i < errors; ++i)
+			for (int j = 0; j < non_root_points; ++j)
+				for (int k = 0; k <= i; ++k)
+					h[i][j] += YZ[k][j] *coeff(g, errors +k -i);
+
+		H = trace_construct(h);
+
+		/*NTL::mat_GF2E X, Y, Z;
 		X.SetDims(errors, errors);
 		Y.SetDims(errors, non_root_points);
-		Y2.SetDims(2 *errors, non_root_points);
 		Z.SetDims(non_root_points, non_root_points);
-		Z2.SetDims(non_root_points, non_root_points);
 
 		// Teoplitz matrix
 		for (int row = 0; row < X.NumRows(); ++row)
@@ -70,36 +80,15 @@ bgc_t::bgc_t(long dimenion, long non_root_points, long errors, NTL::GF2X* suppos
 			for (int col = 0; col < Y.NumCols(); ++col)
 				Y.put(row, col, NTL::power(L[col], row));
 
-		for (int row = 0; row < Y2.NumRows(); ++row)
-			for (int col = 0; col < Y2.NumCols(); ++col)
-				Y2.put(row, col, NTL::power(L[col], row));
-
-		mul(XY, X, Y);
-
 		// Diagonal matrix
 		for (int i = 0; i < Z.NumRows(); ++i)
 			Z.put(i, i, inv(call(g, L[i])));
-		for (int i = 0; i < Z2.NumRows(); ++i)
-		{
-			GF2E e = call(g, L[i]);
-			Z2.put(i, i, inv(e *e));
-		}
 
-		mul(YZ, Y, Z);
-		mul(XYZ, XY, Z);
-		mul(YZ2, Y2, Z2);
+		mul(XYZ, Y, Z);
+		mul(XYZ, X, XYZ);*/
 	}
 
 	// Calculate generator
-	{
-		XY_bin = trace_construct(XY);
-		XYZ_bin = trace_construct(XYZ);
-		YZ_bin = trace_construct(YZ);
-		Y2Z2_bin = trace_construct(YZ2);
-
-		kernel(G_XY, transpose(XY_bin));
-		kernel(G_XYZ, transpose(XYZ_bin));
-	}
 }
 
 ///
@@ -261,11 +250,12 @@ long bgc_t::k() const
 
 vec_GF2 bgc_t::encode(const vec_GF2& msg) const
 {
-	if (msg.length() != k())
+	/*if (msg.length() != k())
 		throw std::invalid_argument("msg.length() != k()");
 
 	// As easy as it gets
-	return msg *G_XYZ;
+	return msg *G_XYZ;*/
+	throw std::runtime_error("Not implemented");
 }
 
 vec_GF2 bgc_t::syndrom_decode_2(const vec_GF2& c) const
@@ -349,7 +339,8 @@ vec_GF2 bgc_t::calculate_error_vector(const std::vector<size_t>& L_indices) cons
 
 bool bgc_t::is_codeword(const vec_GF2& c) const
 {
-	return (c.length() == (uint64_t(1) << dimension)) && IsZero(c *transpose(XYZ_bin));
+	//return (c.length() == (uint64_t(1) << dimension)) && IsZero(c *transpose(XYZ_bin));
+	throw std::runtime_error("Not implemented");
 }
 
 ZZ bgc_t::GF_order() const
@@ -366,7 +357,7 @@ std::string bgc_t::to_str() const
 	   << "Goppa Polynomial: " << print(g) << std::endl
 	   << "Generator: " << print(gen) << std::endl
 	   << "Support={ " << print(L) << '}'
-	   << "\nH (" << XYZ_bin.NumRows() << 'x' << XYZ_bin.NumCols() << ")\n";
+	   << "\nH (" << H.NumRows() << 'x' << H.NumCols() << ")\n";
 
 	return ss.str();
 }

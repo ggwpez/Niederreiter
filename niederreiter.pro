@@ -9,14 +9,14 @@ SOURCES += \
 	src/printer.cpp \
 	src/helper.cpp \
 	src/tests.cpp \
-    src/rand.cpp
+    src/rand_helper.cpp
 
 HEADERS += \
 	include/bgc.hpp \
 	include/printer.hpp \
 	include/helper.hpp \
 	include/tests.hpp \
-    include/rand.hpp
+    include/rand_helper.hpp
 
 QMAKE_CXXFLAGS += -std=c++17
 QMAKE_LIBS += -lntl -lgmp -lm -lpthread

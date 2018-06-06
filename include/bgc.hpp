@@ -14,7 +14,7 @@
 class bgc_t
 {
 public:
-	bgc_t(long dimenion, long non_root_points, long errors, NTL::GF2X* supposed_f = nullptr, NTL::GF2EX* supposed_g = nullptr);
+	bgc_t(long dimenion, long non_root_points, long errors);
 
 	// Vectors passed to encode() need to be k() in length
 	long k() const;
@@ -52,9 +52,7 @@ public:
 	NTL::GF2E gen;
 	std::vector<NTL::GF2E> L;
 	// H* is the H from the amsterdam paper
-	NTL::mat_GF2E XY, XYZ, YZ, YZ2;
-	NTL::mat_GF2 XY_bin, XYZ_bin, YZ_bin, Y2Z2_bin,
-				 G_XY,     G_XYZ;
+	NTL::mat_GF2 H;
 	std::unique_ptr<NTL::GF2X> f;
 	NTL::GF2EX id;
 };
