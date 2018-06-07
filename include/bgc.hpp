@@ -44,13 +44,15 @@ public:
 	std::vector<size_t> get_L_indices(std::vector<NTL::GF2E> const& l) const;
 	NTL::vec_GF2 calculate_error_vector(const std::vector<size_t>& L_indices) const;
 
-
-	//NTL::GF2EX sth_root(NTL::GF2EX const& p, NTL::ZZ const& s);
+	// L[a] *L[b]
+	size_t mul_L_elements(size_t a, size_t b);
+	// L[a] ^ b
+	size_t power_L_elements(size_t a, long exp);
 
 	long dimension, non_root_points, errors;
 	NTL::GF2EX g;
 	NTL::GF2E gen;
-	std::vector<NTL::GF2E> L;
+	NTL::vec_GF2E L;
 	// H* is the H from the amsterdam paper
 	NTL::mat_GF2 H;
 	std::unique_ptr<NTL::GF2X> f;

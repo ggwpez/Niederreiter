@@ -31,38 +31,28 @@ bgc_t::bgc_t(long dimenion, long non_root_points, long errors)
 
 	// Generate L
 	{
-		L.resize(non_root_points);
+		L.SetLength(non_root_points);
 		GF2X f_fix = *f;
 		SetCoeff(f_fix, deg(f_fix), GF2::zero());
 		f_fix.normalize();
-
 		L[0] = gen = conv<GF2E>(f_fix);
 
-		for (size_t i = 1; i < L.size() -1; ++i)
+		for (size_t i = 1; i < L.length() -1; ++i)
 			L[i] = L[i -1] *gen;
-		L[L.size() -1] = 0;
-
-		/*gen = conv<GF2E>(f_fix);
-
-		for (size_t i = 0; i < L.size() -1; ++i)
-		{
-			L[i] = power(gen, i +1);
-		}
-		L[L.size() -1] = 0;*/
+		L[L.length() -1] = 0;
 	}
 
-	// Calculate Parity check matrix H
 	{
 		mat_GF2E YZ, h;
 		YZ.SetDims(errors, non_root_points);
 		h.SetDims(errors, non_root_points);
 
-		for (long j = 0; j < non_root_points; ++j)
-			YZ[0][j] = inv(call(g, L[j]));
+		for (long col = 0; col < non_root_points; ++col)
+			YZ[0][col] = inv(call(g, L[col]));
 
-		for (long i = 1; i < errors; ++i)
-			for (long j = 0; j < non_root_points; ++j)
-				YZ[i][j] = YZ[i -1][j] *L[j];
+		for (long row = 1; row < errors; ++row)
+			for (long col = 0; col < non_root_points; ++col)
+				YZ[row][col] = YZ[row -1][col] *L[col];
 
 		for (int i = 0; i < errors; ++i)
 			for (int j = 0; j < non_root_points; ++j)
@@ -70,86 +60,14 @@ bgc_t::bgc_t(long dimenion, long non_root_points, long errors)
 					h[i][j] += YZ[k][j] *coeff(g, errors +k -i);
 
 		H = trace_construct(h);
-
-		/*NTL::mat_GF2E X, Y, Z;
-		X.SetDims(errors, errors);
-		Y.SetDims(errors, non_root_points);
-		Z.SetDims(non_root_points, non_root_points);
-
-		// Teoplitz matrix
-		for (int row = 0; row < X.NumRows(); ++row)
-			for (int col = 0; col < X.NumCols(); ++col)
-				if (row >= col)
-					X.put(row, col, coeff(g, errors -(row -col)));
-
-		// Vandermonde matrix
-		for (int row = 0; row < Y.NumRows(); ++row)
-			for (int col = 0; col < Y.NumCols(); ++col)
-				Y.put(row, col, NTL::power(L[col], row));
-
-		// Diagonal matrix
-		for (int i = 0; i < Z.NumRows(); ++i)
-			Z.put(i, i, inv(call(g, L[i])));
-
-		mul(XYZ, Y, Z);
-		mul(XYZ, X, XYZ);*/
 	}
-
-	// Calculate generator
-}
-
-///
-/// \brief bgc_t::calculate_fi
-/// \param i
-/// \return
-///
-/// Needed to compute fi = 1 / (x - Li) with:
-/// 1 / (x - Li) = -(1 / g(Li)) * ((g(x) - g(Li)) / (x - Li))
-///
-GF2EX bgc_t::calculate_fi(long i) const
-{
-	// fi = -(1 / g(ai))
-	NTL::GF2EX fi = NTL::GF2EX::zero() -NTL::inv(call(g, L[i]));
-
-	NTL::GF2EX zaehler = g -call(g, L[i]), nenner, pro;
-	SetCoeff(nenner, 1);
-	nenner -= L[i];
-
-	div(pro, zaehler, nenner);
-	// fi *= ((g(x) - g(ai)) / (x - ai))
-	MulMod(fi, fi, pro, g);
-
-	return fi;
 }
 
 GF2EX bgc_t::calculate_sc(const vec_GF2& c) const
 {
-	//if (size_t(c.length()) != L.size())
-		//throw std::invalid_argument("c.length() != L.length(), c.length() was " +std::to_string(c.length()) +" and L.length() was " +std::to_string(L.size()));
 	if (c.length() % deg(*f))
 		throw std::invalid_argument("(c.length() % L.length()) was not NULL");
-	NTL::GF2EX sc_1 = NTL::GF2EX::zero(),
-			   sc_2 = NTL::GF2EX::zero(),
-			   sc_3 = NTL::GF2EX::zero();
-
-	for (long i = 0; i < c.length(); ++i)
-	{
-		if (! IsZero(c[i]))
-			add(sc_1, sc_1, calculate_fi(i));
-	}
-
-	for (long i = 0; i < c.length(); ++i)
-	{
-		if (! IsZero(c[i]))
-		{
-			NTL::GF2EX pol;
-			SetCoeff(pol, 1);
-			sub(pol, pol, L[i]);
-			InvMod(pol, pol, g);
-
-			add(sc_2, sc_2, pol);
-		}
-	}
+	NTL::GF2EX sc = NTL::GF2EX::zero();
 
 	long b = c.length() /deg(*f);
 	for (long i = 0; i < b; ++i)
@@ -160,19 +78,10 @@ GF2EX bgc_t::calculate_sc(const vec_GF2& c) const
 			if (! IsZero(c[i *deg(*f) +j]))
 				SetCoeff(e.LoopHole(), j);
 
-		SetCoeff(sc_3, b -i -1, e);
+		SetCoeff(sc, b -i -1, e);
 	}
 
-	if (((sc_1 != sc_2) || (sc_2 != sc_3)), 0)
-	{
-		std::cerr << "sc_1\n" << sc_1
-				  << "\nsc_2\n" << sc_2
-				  << "\nsc_3\n" << sc_3
-				  << "\nc\n" << print(c) << std::endl;
-		throw std::runtime_error("Assert that the two alternate forms of calculating sc produce the same result. >inb4 they dont");
-	}
-
-	return sc_3;
+	return sc;
 }
 
 GF2EX bgc_t::calculate_vc(const GF2EX& sc) const
@@ -197,7 +106,7 @@ GF2EX bgc_t::calculate_vc(const GF2EX& sc) const
 
 GF2EX bgc_t::calculate_sigma(vec_GF2 e, long spare_i) const
 {
-	assert(size_t(e.length()) == L.size());
+	assert(size_t(e.length()) == L.length());
 	GF2EX ret = GF2EX::zero();
 
 	for (long i = 0; i < e.length(); ++i)
@@ -218,7 +127,7 @@ GF2EX bgc_t::calculate_sigma(vec_GF2 e, long spare_i) const
 
 GF2EX bgc_t::calculate_small_omega(vec_GF2 e) const
 {
-	assert(size_t(e.length()) == L.size());
+	assert(size_t(e.length()) == L.length());
 	GF2EX ret = GF2EX::zero();
 
 	for (long i = 0; i < e.length(); ++i)
@@ -239,12 +148,12 @@ std::vector<size_t> bgc_t::get_L_indices(const std::vector<GF2E>& l) const
 
 	for (size_t	i = 0; i < l.size(); ++i)
 	{
-		auto found = std::find(L.cbegin(), L.cend(), l[i]);
+		auto found = std::find(L.begin(), L.end(), l[i]);
 
-		if (found == L.cend())
+		if (found == L.end())
 			throw std::runtime_error("Could not find element " +print(l[i]) +" in set L");
 		else
-			ret[i] = (found -L.cbegin());
+			ret[i] = (found -L.begin());
 	}
 
 	return ret;
@@ -336,12 +245,24 @@ GF2EX bgc_t::sqr_root(const GF2EX& p) const
 vec_GF2 bgc_t::calculate_error_vector(const std::vector<size_t>& L_indices) const
 {
 	vec_GF2 ret;
-	ret.SetLength(L.size());
+	ret.SetLength(L.length());
 
 	for (size_t i = 0; i < L_indices.size(); ++i)
 		ret[L_indices[i]] = GF2(1);
 
 	return ret;
+}
+
+// L[a] * L[b] = gen^(a+1) * gen^(b+1) = gen^(a+b+2) = L[a+b+1]
+size_t bgc_t::mul_L_elements(size_t a, size_t b)
+{
+	return (a+b+1) % L.length();
+}
+
+// L[a] ^ exp = gen^(a+1) ^ exp = gen^(exp*a+exp) = L[exp*a+exp-1]
+size_t bgc_t::power_L_elements(size_t a, long exp)
+{
+	return (exp *a +exp -1) % L.length();
 }
 
 bool bgc_t::is_codeword(const vec_GF2& c) const

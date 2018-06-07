@@ -133,7 +133,7 @@ void compute_systematic_form(const mat_GF2& H, mat_GF2& sInv, mat_GF2& m, mat_GF
 	do
 	{
 		p = create_rand_permutation(n);
-		hp = H *p;
+		mul(hp, H, p);
 		sInv = getLeftSubMatrix(hp);
 	} while (IsZero(determinant(sInv)));
 
@@ -215,7 +215,7 @@ NTL::Mat<GF2> trace_construct(const NTL::Mat<GF2E>& mat)
 		{
 			NTL::GF2X const& e = NTL::conv<NTL::GF2X>(mat[row][col]);
 
-			for (long i = 0; i < m; ++i)	// < deg(e) TODO
+			for (long i = 0; i < m; ++i)	// i < deg(e) TODO
 				ret.put(m *row +i, col, NTL::coeff(e, i));
 		}
 

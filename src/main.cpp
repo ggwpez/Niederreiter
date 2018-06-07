@@ -64,6 +64,7 @@ int main(int, char**)
 	int const t = 117;		// 9
 
 	bgc_t bgc(m, n, t);
+	std::cout << "BGC found" << std::endl;
 	std::cout << bgc.to_str() << std::endl;
 
 	nr_pubkey_t pub;
