@@ -66,7 +66,9 @@ void BGC::calculate_g(long t, GF2EX& g)
 	do
 	{
 		BuildRandomIrred(g, tmp);
+#if DEBUG
 		++tries;
+#endif
 	} while (zero_coefficients(g) > 1);
 #if DEBUG
 	if (tries > 1)

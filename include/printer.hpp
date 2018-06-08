@@ -15,6 +15,7 @@ inline std::string print(size_t s)
 {
 	return std::to_string(s);
 }
+
 template<typename T>
 inline std::string print(std::vector<T> const& vec)
 {
