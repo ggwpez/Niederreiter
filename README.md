@@ -10,26 +10,26 @@ CMake support is in work.
 
 #### NTL
 
-Needed for calculating in Finite Fields.
-Tested with [ntl-11.1.0](http://www.shoup.net/ntl/ntl-11.1.0.tar.gz) https-rehosted [here](https://tasty.limo//random/ntl-11.1.0.tar.gz), [other versions](http://www.shoup.net/ntl/download.html).
-Build it with the following commands, extracted from [here](http://www.shoup.net/ntl/doc/tour-unix.html):
+Needed for calculating in Finite Fields.  
+Tested with [ntl-11.1.0](http://www.shoup.net/ntl/ntl-11.1.0.tar.gz) https-rehosted [here](https://tasty.limo//random/ntl-11.1.0.tar.gz), [other versions](http://www.shoup.net/ntl/download.html).  
+Build it with the following commands, extracted from [here](http://www.shoup.net/ntl/doc/tour-unix.html):  
 
-`gunzip ntl-11.1.0.tar.gz`
-`tar ntl-11.1.0.tar`
-`cd ntl-11.1.0/src`
-`./configure`
-`make`
-`make check`
-`sudo make check`
+`gunzip ntl-11.1.0.tar.gz`  
+`tar ntl-11.1.0.tar`  
+`cd ntl-11.1.0/src`  
+`./configure`  
+`make`  
+`make check`  
+`sudo make check`  
 
 If you dont have [GNU GMP](https://gmplib.org/) see the linked build instructions above.
 
 #### Build the Project
 
-`git clone https://gitlab.com/ggwpez/Niederreiter/`
-`mkdir Niederreiter/bin`
-`cd Niederreiter/bin`
-`qmake ../pro`
-`make` or `make -f Makefile.debug`
+`git clone https://gitlab.com/ggwpez/Niederreiter/`  
+`mkdir Niederreiter/bin`  
+`cd Niederreiter/bin`  
+`qmake ../pro`  
+`make` or `make -f Makefile.debug`  
 
 Usage will follow...
