@@ -1,6 +1,7 @@
 #include "tests.hpp"
 #include "helper.hpp"
 #include "printer.hpp"
+#include "bgc.hpp"
 
 #include <NTL/mat_GF2.h>
 

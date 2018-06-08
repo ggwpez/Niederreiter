@@ -6,8 +6,7 @@
 
 using namespace NTL;
 
-// TODO poly by reference but normalize is member only…
-void monice(GF2EX& ret, GF2EX poly)
+void monice(GF2EX poly, GF2EX& ret)
 {
 	if (IsZero(poly))
 	{
@@ -29,51 +28,11 @@ void monice(GF2EX& ret, GF2EX poly)
 	}
 }
 
-GF2EX monice(const GF2EX& poly)
+GF2EX monice(GF2EX const& poly)
 {
 	GF2EX ret;
-	monice(ret, poly);
+	monice(poly, ret);
 	return ret;
-}
-
-std::vector<GF2E> find_roots(const GF2EX& poly)	// TODO only support L needs to be tested
-{
-	std::vector<GF2E> roots;
-	GF2E x = GF2E::zero();
-	assert(GF2E::modulus().n < 64);
-
-	for (long i = 0; i < (1ull << GF2E::modulus().n); ++i)
-	{
-		x = generate_GF2E(i);
-		GF2E y = call(poly, x);
-		if (IsZero(y))
-			roots.push_back(x);
-
-		//std::cout << "poly(" << print(x) << ") = " << print(y) << std::endl;
-	}
-
-	return roots;
-}
-
-GF2E call(GF2EX const& p, const GF2E& x)
-{
-	GF2E res = GF2E::zero();
-
-	for (int i = 0; i <= deg(p); ++i)
-	{
-		GF2E tmp;
-		GF2E c = coeff(p, i);
-
-		if (! IsZero(c))
-		{
-			power(tmp, x, i);
-			if (! IsOne(c))
-				mul(tmp, tmp, c);
-			add(res, res, tmp);
-		}
-	}
-
-	return res;
 }
 
 mat_GF2 create_rand_permutation(size_t s)
@@ -86,7 +45,8 @@ mat_GF2 create_rand_permutation(size_t s)
 	return ret;
 }
 
-GF2E call_horner(const GF2EX& p, const GF2E& x)
+// Horner schema
+GF2E call(GF2EX const& p, GF2E const& x)
 {
 	GF2E result = LeadCoeff(p);
 
@@ -96,52 +56,7 @@ GF2E call_horner(const GF2EX& p, const GF2E& x)
 	return result;
 }
 
-vec_GF2E to_ext_field_poly(const vec_GF2& vec, GF2X const& field)
-{
-	int m = deg(field);
-	if (vec.length() % m != 0)
-		throw std::runtime_error("Conversion impossible");
-
-	long t = vec.length() / m;
-	vec_GF2E result;
-	result.SetLength(t);
-	long count = 0;
-	for (long i = t - 1; i >= 0; --i)
-	{
-		for (long j = deg(field) - 1; j >= 0; --j)
-		{
-			long q = count >> 5;
-			long r = count & 0x1f;
-
-			long e = (conv<long>(vec[q]) >> r) & 1;
-			if (e == 1)
-			{
-				result[i] += generate_GF2E(long(i) << j);
-			}
-			count++;
-		}
-	}
-
-	return result;
-}
-
-void compute_systematic_form(const mat_GF2& H, mat_GF2& sInv, mat_GF2& m, mat_GF2& p)
-{
-	long n = H.NumCols();
-	mat_GF2 hp;
-
-	do
-	{
-		p = create_rand_permutation(n);
-		hp = H *p;
-		sInv = getLeftSubMatrix(hp);
-	} while (IsZero(determinant(sInv)));
-
-	mat_GF2 shp = inv(sInv) *hp;
-	m = getRightSubMatrix(shp);
-}
-
-mat_GF2 getLeftSubMatrix(const mat_GF2& mat)
+mat_GF2 getLeftSubMatrix(mat_GF2 const& mat)
 {
 	if (mat.NumCols() <= mat.NumRows())
 		throw std::invalid_argument("Empty Submatrix");
@@ -156,7 +71,7 @@ mat_GF2 getLeftSubMatrix(const mat_GF2& mat)
 	return res;
 }
 
-mat_GF2 getRightSubMatrix(const mat_GF2& mat)
+mat_GF2 getRightSubMatrix(mat_GF2 const& mat)
 {
 	if (mat.NumCols() <= mat.NumRows())
 		throw std::invalid_argument("Empty Submatrix");
@@ -172,7 +87,7 @@ mat_GF2 getRightSubMatrix(const mat_GF2& mat)
 	return res;
 }
 
-mat_GF2 mat_merge_colls(const mat_GF2& a, const mat_GF2& b)
+mat_GF2 mat_merge_colls(mat_GF2 const& a, mat_GF2 const& b)
 {
 	if (a.NumRows() != b.NumRows())
 		throw std::invalid_argument("a and b need the same number of Rows");
@@ -192,32 +107,51 @@ mat_GF2 mat_merge_colls(const mat_GF2& a, const mat_GF2& b)
 	return res;
 }
 
-mat_GF2 mat_merge_ID_left(const mat_GF2& b)
+mat_GF2 mat_merge_ID_left(mat_GF2 const& b)
 {
 	mat_GF2 ID = ident_mat_GF2(b.NumRows());
 	return mat_merge_colls(ID, b);
 }
 
-mat_GF2 mat_merge_ID_right(const mat_GF2& a)
+mat_GF2 mat_merge_ID_right(mat_GF2 const& a)
 {
 	mat_GF2 ID = ident_mat_GF2(a.NumRows());
 	return mat_merge_colls(a, ID);
 }
 
-NTL::Mat<GF2> trace_construct(const NTL::Mat<GF2E>& mat)
+void trace_construct(NTL::Mat<GF2E> const& mat, NTL::Mat<GF2>& H)
 {
-	NTL::Mat<NTL::GF2> ret;
 	long m = NTL::GF2E::modulus().n;
-	ret.SetDims(m *mat.NumRows(), mat.NumCols());
+	H.SetDims(m *mat.NumRows(), mat.NumCols());
 
 	for (long row = 0; row < mat.NumRows(); ++row)
 		for (long col = 0; col < mat.NumCols(); ++col)
 		{
 			NTL::GF2X const& e = NTL::conv<NTL::GF2X>(mat[row][col]);
 
-			for (long i = 0; i < m; ++i)	// < deg(e) TODO
-				ret.put(m *row +i, col, NTL::coeff(e, i));
+			for (long i = 0; i < m; ++i)	// i < deg(e) TODO
+				H.put(m *row +i, col, NTL::coeff(e, i));
 		}
+}
 
-	return ret;
+void calculate_sigma(const GF2EX& a, const GF2EX& b, const GF2EX& g, GF2EX& sigma)
+{
+	NTL::GF2EX F = a, G = b, B = NTL::conv<NTL::GF2EX>("[[1]]"), C = NTL::GF2EX::zero();
+	long t = NTL::deg(b);
+
+	while (NTL::deg(G) > (t /2))
+	{
+		NTL::swap(F, G); NTL::swap(B, C);
+
+		while (NTL::deg(F) >= NTL::deg(G))
+		{
+			long j = NTL::deg(F) -NTL::deg(G);
+			auto h = NTL::LeadCoeff(F) /NTL::LeadCoeff(G);
+
+			F = F -h *NTL::PowerXMod(j, g) *G;
+			B = B -h *NTL::PowerXMod(j, g) *C;
+		}
+	}
+
+	sigma = (G*G) +NTL::PowerXMod(1, g) *(C*C);	/// TODO optimize
 }
