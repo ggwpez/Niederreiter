@@ -29,10 +29,10 @@ int main(int, char**)
 	NCS::encode(msg, keys.pub, cipher);
 	NCS::decode(cipher, keys.sec, recovered);
 
-	std::cout << "HASH_OF(msg)       " << HASH_OF(msg)
+	std::cout << "HASH_OF(msg)       " << HASH_OF(msg) << std::endl
 			  // Should be 7577682492700538189 if no parameters were changed
-			  << "\nHASH_OF(cypher)    " << HASH_OF(cipher)
-			  << "\nHASH_OF(recovered) " << HASH_OF(recovered) << '\n';
+			  << "HASH_OF(cypher)    " << HASH_OF(cipher) << std::endl
+			  << "HASH_OF(recovered) " << HASH_OF(recovered) << std::endl;
 
 	if (msg != recovered)
 		throw std::runtime_error("Decoding error");
