@@ -15,12 +15,12 @@ Tested with [ntl-11.1.0](http://www.shoup.net/ntl/ntl-11.1.0.tar.gz) https-rehos
 Build it with the following commands, extracted from [here](http://www.shoup.net/ntl/doc/tour-unix.html):  
 
 `gunzip ntl-11.1.0.tar.gz`  
-`tar ntl-11.1.0.tar`  
+`tar xf ntl-11.1.0.tar`  
 `cd ntl-11.1.0/src`  
 `./configure`  
 `make`  
 `make check`  
-`sudo make check`  
+`sudo make install`  
 
 If you dont have [GNU GMP](https://gmplib.org/) see the linked build instructions above.
 
