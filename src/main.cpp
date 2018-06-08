@@ -30,7 +30,7 @@ int main(int, char**)
 	NCS::decode(cipher, keys.sec, recovered);
 
 	std::cout << "HASH_OF(msg)       " << HASH_OF(msg) << std::endl
-			  // Should be 7577682492700538189 if no parameters were changed
+			  // Should be 9019764880683253672 if no parameters were changed
 			  << "HASH_OF(cypher)    " << HASH_OF(cipher) << std::endl
 			  << "HASH_OF(recovered) " << HASH_OF(recovered) << std::endl;
 
