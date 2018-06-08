@@ -29,7 +29,7 @@ If you dont have [GNU GMP](https://gmplib.org/) see the linked build instruction
 `git clone https://gitlab.com/ggwpez/Niederreiter/`  
 `mkdir Niederreiter/bin`  
 `cd Niederreiter/bin`  
-`qmake ../pro`  
+`qmake ../`  
 `make` or `make -f Makefile.debug`  
 
 Usage will follow...
