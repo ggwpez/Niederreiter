@@ -9,9 +9,8 @@
 #include <vector>
 
 NTL::GF2E call(NTL::GF2EX const& p, NTL::GF2E const& x);
-NTL::GF2E call_slow(NTL::GF2EX const& p, NTL::GF2E const& x);
 // Make Polynomial monic
-void monice(NTL::GF2EX& ret, NTL::GF2EX poly);
+void monice(NTL::GF2EX poly, NTL::GF2EX& ret);
 NTL::GF2EX monice(NTL::GF2EX const&poly);
 
 NTL::mat_GF2 create_rand_permutation(size_t s);
@@ -36,11 +35,8 @@ inline NTL::ZZ width(NTL::Vec<T> const& vec)
 	return ret;
 }
 
-std::vector<NTL::GF2E> find_roots(NTL::GF2EX const&);
-
 //template<typename NTL::GF2E>
-NTL::Mat<NTL::GF2> trace_construct(NTL::Mat<NTL::GF2E> const& m);
-NTL::Mat<NTL::GF2> trace_construct_2(NTL::Mat<NTL::GF2E> const& m);
+void trace_construct(NTL::Mat<NTL::GF2E> const& m, NTL::Mat<NTL::GF2>& H);
 
 // FIXME: Please someone tell me how to do this better, its horrible!
 inline NTL::GF2E generate_GF2E(uint64_t i)
@@ -58,7 +54,7 @@ inline NTL::GF2E generate_GF2E(uint64_t i)
 /// https://www.cdc.informatik.tu-darmstadt.de/fileadmin/user_upload/Group_CDC/Documents/Lehre/SS15/pqc/code_based_Paulo_Barreto.pdf
 /// page 56
 ///
-inline NTL::GF2EX calc_sigma(const NTL::GF2EX& a, const NTL::GF2EX& b, const NTL::GF2EX& g)
+inline void calculate_sigma(NTL::GF2EX const& a, NTL::GF2EX const& b, NTL::GF2EX const& g, NTL::GF2EX& sigma)
 {
 	NTL::GF2EX F = a, G = b, B = NTL::conv<NTL::GF2EX>("[[1]]"), C = NTL::GF2EX::zero();
 	long t = NTL::deg(b);
@@ -77,7 +73,7 @@ inline NTL::GF2EX calc_sigma(const NTL::GF2EX& a, const NTL::GF2EX& b, const NTL
 		}
 	}
 
-	return (G*G) +NTL::PowerXMod(1, g) *(C*C);
+	sigma = (G*G) +NTL::PowerXMod(1, g) *(C*C);	/// TODO optimize
 }
 
-NTL::vec_GF2E to_ext_field_poly(const NTL::vec_GF2& vec, NTL::GF2X const& field);
+NTL::vec_GF2E to_ext_field_poly(NTL::vec_GF2 const& vec, NTL::GF2X const& field);

@@ -13,275 +13,221 @@
 
 using namespace NTL;
 
-bgc_t::bgc_t(long dimenion, long non_root_points, long errors)
-	: /*d, m*/ dimension(dimenion), /*n*/ non_root_points(non_root_points), /*t*/ errors(errors)
-{		// n k t
-	if (! ((2 <= errors) && (errors <= ((1l << dimenion) -1) /dimenion)))
-		throw std::invalid_argument("errors");
-	if (! ((dimenion *errors +1 <= non_root_points) && (non_root_points <= (1l << dimenion))))
-		throw std::invalid_argument("non_root_points");
+BGC::BGC(long m, long n, long t, GF2X const& f, GF2EX const& g, GF2E const& gen, support_t const& L, mat_GF2 const& H)
+	: m(m), n(n), t(t), f(f), g(g), gen(gen), L(L), H(H)
+{
 
-	// TODO check 2 <= errors <= (non_root_points -1) /dimension
-	// TODO needed?
-	f = std::make_unique<GF2X>(NTL::BuildIrred_GF2X(dimenion));	// irreducible polynome of degree 10 over GF(2)
-	GF2E::init(*f);
-	SetCoeff(id, 1);
+}
 
-	g = NTL::BuildIrred_GF2EX(errors);	// TODO not only binary Coefficients, otherwise attackable with Liodreau-Sendrier
+BGC BGC::create(long m, long n, long t)
+{
+	NTL::GF2X f;
+	NTL::GF2EX g;
+	calculate_f(m, f);
+	GF2E::init(f);
+	calculate_g(t, g);
 
-	// Generate L
+	return BGC::create_with_field_and_gp_poly(m, n, t, f, g);
+}
+
+BGC BGC::create_with_field(long m, long n, long t, GF2X const& f)
+{
+	GF2E::init(f);
+	NTL::GF2EX g;
+	calculate_g(t, g);
+
+	return BGC::create_with_field_and_gp_poly(m, n, t, f, g);
+}
+
+BGC BGC::create_with_gp_poly(long m, long n, long t, GF2EX const& g)
+{
+	NTL::GF2X f;
+	calculate_f(m, f);
+
+	return BGC::create_with_field_and_gp_poly(m, n, t, f, g);
+}
+
+BGC BGC::create_with_field_and_gp_poly(long m, long n, long t, GF2X const& f, GF2EX const& g)
+{
+	check_args(m, n, t, f, g);
+	BGC bgc = BGC(m, n, t, f, g, GF2E::zero(), support_t(), mat_GF2());
+
+	calculate_gen(f, bgc.gen);
+	calculate_L(n, bgc.gen, bgc.L);
+	calculate_H(t, bgc.L, bgc.g, bgc.H);
+
+	return bgc;
+}
+
+void BGC::calculate_f(long m, GF2X& f)
+{
+	f = NTL::BuildIrred_GF2X(m);	// TODO random
+}
+
+void BGC::calculate_g(long t, GF2EX& g)
+{
+	g = NTL::BuildIrred_GF2EX(t);	// TODO random
+}
+
+void BGC::calculate_gen(GF2X f, GF2E& gen)
+{
+	SetCoeff(f, deg(f), GF2::zero());
+	f.normalize();
+	gen = conv<GF2E>(f);
+}
+
+void BGC::calculate_H(long t, support_t L, GF2EX const& g, mat_GF2& H)
+{
+	long n = L.length();
+	mat_GF2E YZ, h;
+	YZ.SetDims(t, n);
+	h.SetDims(t, n);
+
+	for (long col = 0; col < n; ++col)
+		YZ[0][col] = inv(call(g, L[col]));
+
+	for (long row = 1; row < t; ++row)
+		for (long col = 0; col < n; ++col)
+			YZ[row][col] = YZ[row -1][col] *L[col];
+
+	for (int i = 0; i < t; ++i)
+		for (int j = 0; j < n; ++j)
+			for (int k = 0; k <= i; ++k)
+				h[i][j] += YZ[k][j] *coeff(g, t +k -i);
+
+	trace_construct(h, H);
+}
+
+void BGC::calculate_L(long n, GF2E const& gen, support_t& L)
+{
+	L.SetLength(n);
+	/*GF2X f_fix = f;
+	SetCoeff(f_fix, deg(f_fix), GF2::zero());
+	f_fix.normalize();
+	L[0] = gen = conv<GF2E>(f_fix);*/
+	L[0] = gen;
+
+	for (long i = 1; i < L.length() -1; ++i)
+		L[i] = L[i -1] *gen;
+	L[L.length() -1] = 0;
+}
+
+void BGC::check_args(long m, long n, long t, GF2X const& f, GF2EX const& g)
+{
+	if (! ((2 <= t) && (t <= ((1l << m) -1) /m)))
+		throw std::invalid_argument("t");
+	if (! ((m *t +1 <= n) && (n <= (1l << m))))
+		throw std::invalid_argument("n");
+	if (deg(f) != m)
+		throw std::invalid_argument("f");
+	if (deg(g) != t)
+		throw std::invalid_argument("g");
+}
+
+void BGC::calculate_error(GF2EX const& poly, vec_GF2& e) const
+{
+	e.SetLength(n);
+
+	for (long i = 0; i < e.length(); ++i)
 	{
-		L.SetLength(non_root_points);
-		GF2X f_fix = *f;
-		SetCoeff(f_fix, deg(f_fix), GF2::zero());
-		f_fix.normalize();
-		L[0] = gen = conv<GF2E>(f_fix);
-
-		for (size_t i = 1; i < L.length() -1; ++i)
-			L[i] = L[i -1] *gen;
-		L[L.length() -1] = 0;
-	}
-
-	{
-		mat_GF2E YZ, h;
-		YZ.SetDims(errors, non_root_points);
-		h.SetDims(errors, non_root_points);
-
-		for (long col = 0; col < non_root_points; ++col)
-			YZ[0][col] = inv(call(g, L[col]));
-
-		for (long row = 1; row < errors; ++row)
-			for (long col = 0; col < non_root_points; ++col)
-				YZ[row][col] = YZ[row -1][col] *L[col];
-
-		for (int i = 0; i < errors; ++i)
-			for (int j = 0; j < non_root_points; ++j)
-				for (int k = 0; k <= i; ++k)
-					h[i][j] += YZ[k][j] *coeff(g, errors +k -i);
-
-		H = trace_construct(h);
+		GF2E y = call(poly, L[i]);
+		if (IsZero(y))
+			e[i] = GF2(1);
 	}
 }
 
-GF2EX bgc_t::calculate_sc(const vec_GF2& c) const
+void BGC::calculate_sc(vec_GF2 const& c, GF2EX& sc) const
 {
-	if (c.length() % deg(*f))
+	if (c.length() % deg(f))
 		throw std::invalid_argument("(c.length() % L.length()) was not NULL");
-	NTL::GF2EX sc = NTL::GF2EX::zero();
+	sc = NTL::GF2EX::zero();
 
-	long b = c.length() /deg(*f);
+	long b = c.length() /deg(f);
 	for (long i = 0; i < b; ++i)
 	{
 		GF2E e = GF2E::zero();
 
-		for (long j = 0; j < deg(*f); ++j)
-			if (! IsZero(c[i *deg(*f) +j]))
+		for (long j = 0; j < deg(f); ++j)
+			if (! IsZero(c[i *deg(f) +j]))
 				SetCoeff(e.LoopHole(), j);
 
 		SetCoeff(sc, b -i -1, e);
 	}
-
-	return sc;
 }
 
-GF2EX bgc_t::calculate_vc(const GF2EX& sc) const
+void BGC::calculate_vc(GF2EX const& sc, GF2EX& vc) const
 {
 	// Return the identity function of there are no errors
 	if (IsZero(sc))
-		throw std::runtime_error("sc not invertible");
+		throw std::runtime_error("sc not invertible");	 // FIXME
 	else
 	{
-		GF2EX v;
+		GF2EX v, id = conv<GF2EX>("[[][1]]");
 
 		// v = 1 / sc
 		InvMod(v, sc, g);
 		if (v == sc)
-			return sc;
-		// v = 1 / sc -x
-		add(v, v, id);		// TODO try an add
-		//std::cout << "Trying to square-root: " << print(v) << '\n';
-		return sqr_root(v);
-	}
-}
-
-GF2EX bgc_t::calculate_sigma(vec_GF2 e, long spare_i) const
-{
-	assert(size_t(e.length()) == L.length());
-	GF2EX ret = GF2EX::zero();
-
-	for (long i = 0; i < e.length(); ++i)
-	{
-		if (! IsZero(e[i]) && (spare_i != i))
-		{
-			GF2EX tmp = id;
-			sub(tmp, tmp, L[i]);
-			if (IsZero(ret))
-				ret	= tmp;
-			else
-				MulMod(ret, ret, tmp, g);
-		}
-	}
-
-	return ret;
-}
-
-GF2EX bgc_t::calculate_small_omega(vec_GF2 e) const
-{
-	assert(size_t(e.length()) == L.length());
-	GF2EX ret = GF2EX::zero();
-
-	for (long i = 0; i < e.length(); ++i)
-	{
-		if (! IsZero(e[i]))
-		{
-			GF2EX tmp = calculate_sigma(e, i);
-			add(ret, ret, tmp);
-		}
-	}
-
-	return ret;
-}
-
-std::vector<size_t> bgc_t::get_L_indices(const std::vector<GF2E>& l) const
-{
-	std::vector<size_t> ret(l.size(), 0);
-
-	for (size_t	i = 0; i < l.size(); ++i)
-	{
-		auto found = std::find(L.begin(), L.end(), l[i]);
-
-		if (found == L.end())
-			throw std::runtime_error("Could not find element " +print(l[i]) +" in set L");
+			vc = sc;
 		else
-			ret[i] = (found -L.begin());
+		{
+			// v = 1 / sc -x
+			add(v, v, id);		// TODO try an add
+			//std::cout << "Trying to square-root: " << print(v) << '\n';
+			sqr_root(v, vc);
+		}
 	}
-
-	return ret;
 }
 
-long bgc_t::k() const
+long BGC::k() const
 {
-	return non_root_points -errors *dimension;
+	return n -t *m;
 }
 
-vec_GF2 bgc_t::encode(const vec_GF2& msg) const
+void BGC::syndrom_decode(vec_GF2 const& c, vec_GF2& e) const
 {
-	/*if (msg.length() != k())
-		throw std::invalid_argument("msg.length() != k()");
+	GF2EX sc, vc, elp;
 
-	// As easy as it gets
-	return msg *G_XYZ;*/
-	throw std::runtime_error("Not implemented");
-}
+	calculate_sc(c, sc);
+	calculate_vc(sc, vc);
+	calculate_sigma(vc, g, g, elp);
+	monice(elp, elp);				// Optional
 
-vec_GF2 bgc_t::syndrom_decode_2(const vec_GF2& c) const
-{
-	GF2EX syndrome = calculate_sc(c);
-	auto t = InvMod(syndrome, g);
-
-	auto tau = t +conv<GF2EX>("[[][1]]");
-	tau = sqr_root(tau);
-
-	auto a2plusX2b = monice(calc_sigma(tau, g, g));
-
-	vec_GF2 e;
-	e.SetLength(non_root_points);
-	for (long i = 0; i < e.length(); ++i)
-		if (IsZero(call(a2plusX2b, L[i])))
-			e[i] = GF2(1);
-
-	return e;
-}
-
-vec_GF2 bgc_t::syndrom_decode(const vec_GF2& c) const
-{
-	/*if (uint64_t(c.length()) != (uint64_t(1) << dimension) || c.length() != L.size())
-		throw std::invalid_argument("c.length() != (1 << dimension) || c.length() != L.size() was " +std::to_string(c.length()));
-	if (is_codeword(c))
-		return c;*/
-
-	auto sc = calculate_sc(c);	// Calculate syndrom function
-	auto s = calculate_vc(sc);
-	auto split_me = monice(calc_sigma(s, g, g));
-	auto roots = find_roots(split_me);
-	//std::cout << "roots " << print(roots) << '\n';
-	std::vector<size_t> B = get_L_indices(roots);
-	//std::cout << "errors: " << print(B) << '\n';
-	vec_GF2 e = calculate_error_vector(B);
-	//std::cout << "error_vector: " << print(e) << '\n';
-
-	//vec_GF2 corrected = c +e;
-
-	//if (! is_codeword(corrected))
-		//throw std::runtime_error("Internal decoding error; Corrected message was not a codeword");
-
-	return e;
-}
-
-GF2EX bgc_t::berlekamp_massey(const vec_GF2& c) const
-{
-	auto s = calculate_sc(c);
-
-	if (IsZero(s))
-		throw std::runtime_error("sc not invertible");
-
-	GF2EX gcd, sigma, omega;
-	XGCD(gcd, sigma, omega,s,g);
-	return sigma;
+	calculate_error(elp, e);
 }
 
 // (x)^(1/p) = x^(p^m-1)
-GF2EX bgc_t::sqr_root(const GF2EX& p) const
+void BGC::sqr_root(GF2EX const& p, GF2EX& res) const
 {
-	ZZ e = (ZZ(1) << (dimension *errors -1));
+	ZZ e = (ZZ(1) << (m *t -1));
 
-	auto i = PowerMod(p, e, g);
-	if (SqrMod(i, g) != p)
+	res = PowerMod(p, e, g);
+	if (SqrMod(res, g) != p)
 		throw std::runtime_error("Could not find root");
-
-	return i;
-}
-
-vec_GF2 bgc_t::calculate_error_vector(const std::vector<size_t>& L_indices) const
-{
-	vec_GF2 ret;
-	ret.SetLength(L.length());
-
-	for (size_t i = 0; i < L_indices.size(); ++i)
-		ret[L_indices[i]] = GF2(1);
-
-	return ret;
 }
 
 // L[a] * L[b] = gen^(a+1) * gen^(b+1) = gen^(a+b+2) = L[a+b+1]
-size_t bgc_t::mul_L_elements(size_t a, size_t b)
+size_t BGC::mul_L_elements(size_t a, size_t b) const
 {
 	return (a+b+1) % L.length();
 }
 
 // L[a] ^ exp = gen^(a+1) ^ exp = gen^(exp*a+exp) = L[exp*a+exp-1]
-size_t bgc_t::power_L_elements(size_t a, long exp)
+size_t BGC::power_L_elements(size_t a, long exp) const
 {
 	return (exp *a +exp -1) % L.length();
 }
 
-bool bgc_t::is_codeword(const vec_GF2& c) const
+ZZ BGC::order() const
 {
-	//return (c.length() == (uint64_t(1) << dimension)) && IsZero(c *transpose(XYZ_bin));
-	throw std::runtime_error("Not implemented");
+	return (ZZ(1) << (m *t));
 }
 
-ZZ bgc_t::GF_order() const
-{
-	return (ZZ(1) << (dimension *errors));
-}
-
-std::string bgc_t::to_str() const
+std::string BGC::to_str() const
 {
 	std::ostringstream ss;
 
-	ss << "[n,k,d]-Code = [" << (uint64_t(1) << dimension) << ',' << k() << ',' << (2*errors +1) << "]" << std::endl
-	   << "F(2^" << dimension << ") = " << "F(2)[x]/" << print(*f) << std::endl
+	ss << "[n,k,d]-Code = [" << (uint64_t(1) << m) << ',' << k() << ',' << (2*t +1) << "]" << std::endl
+	   << "F(2^" << m << ") = " << "F(2)[x]/" << print(f) << std::endl
 	   << "Goppa Polynomial: " << print(g) << std::endl
 	   << "Generator: " << print(gen) << std::endl
 	   << "Support={ " << print(L) << '}'

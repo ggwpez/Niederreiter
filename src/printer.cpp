@@ -118,7 +118,7 @@ std::string print(NTL::GF2EX const& p)
 	return ss.str();
 }
 
-std::string print(const NTL::GF2& p)
+std::string print(NTL::GF2 const& p)
 {
 	return (NTL::IsZero(p) ? "0" : "1");
 }

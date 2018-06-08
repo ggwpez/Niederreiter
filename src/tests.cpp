@@ -30,36 +30,3 @@ int test()
 	assert(merged == mat);
 	return 0;
 }
-
-bool test_petterson(bgc_t const& bgc)
-{
-	NTL::vec_GF2 message;
-	message.SetLength(bgc.k());
-
-	for (int i = 0; i < message.length(); ++i)
-		message[i] = NTL::random_GF2();
-
-	NTL::vec_GF2 resistant = bgc.encode(message);
-	NTL::vec_GF2 modded = resistant;
-
-	for (int i = 0; i < bgc.errors; ++i)
-		modded[i*2] = NTL::GF2(1) -resistant[i*2];	// TODO random
-
-	auto e = bgc.syndrom_decode_2(modded);
-	auto recovered = modded +e;
-
-	auto worked = (recovered == resistant);
-	if (! worked)
-		std::cerr << "Message:   " << print(message) << std::endl
-				  << "Resistant:  " << print(resistant) << std::endl
-				  << "Modded:    " << print(modded) << std::endl
-				  << "Recovered: " << print(recovered) << std::endl
-				  << "(Recovered != Resistant)" << std::endl;
-
-	return worked;
-}
-
-mat_GF2 canonical_check_matrix(bgc_t const& bgc)
-{
-
-}

@@ -10,51 +10,53 @@
 #include <vector>
 #include <memory>
 
+typedef NTL::vec_GF2E support_t;
+
 // Binary Goppa Code
-class bgc_t
+class BGC
 {
 public:
-	bgc_t(long dimenion, long non_root_points, long errors);
+	BGC() = default;
+	BGC(long m, long n, long t, NTL::GF2X const& f, NTL::GF2EX const& g, const NTL::GF2E& gen, support_t const& L, const NTL::mat_GF2& H);
 
-	// Vectors passed to encode() need to be k() in length
+	static BGC create(long m, long n, long t);
+	static BGC create_with_field(long m, long n, long t, NTL::GF2X const& f);
+	static BGC create_with_gp_poly(long m, long n, long t, NTL::GF2EX const& g);
+	static BGC create_with_field_and_gp_poly(long m, long n, long t, NTL::GF2X const& f, NTL::GF2EX const& g);
+
+	static void calculate_f(long m, NTL::GF2X& f);
+	static void calculate_g(long t, NTL::GF2EX& g);
+	static void calculate_gen(NTL::GF2X f, NTL::GF2E& gen);
+
+	static void calculate_H(long t, support_t L, NTL::GF2EX const& g, NTL::mat_GF2& H);
+	static void calculate_L(long n, NTL::GF2E const& gen, support_t& L);
+
+	static void check_args(long m, long n, long t, NTL::GF2X const& f, NTL::GF2EX const& g);
 	long k() const;
-	bool is_codeword(NTL::vec_GF2 const&) const;
 	// Returns the number of elements of the Galois field
-	NTL::ZZ GF_order() const;
+	NTL::ZZ order() const;
 
-	NTL::vec_GF2 encode(NTL::vec_GF2 const& msg) const;
-	NTL::vec_GF2 syndrom_decode(const NTL::vec_GF2& c) const;
-	NTL::vec_GF2 syndrom_decode_2(const NTL::vec_GF2& c) const;
-	NTL::GF2EX berlekamp_massey(const NTL::vec_GF2& c) const;
+	void syndrom_decode(NTL::vec_GF2 const& c, NTL::vec_GF2& e) const;
+	NTL::GF2EX berlekamp_massey(NTL::vec_GF2 const& c) const;
 
 	std::string to_str() const;
 
-	NTL::GF2EX sqr_root(NTL::GF2EX const& p) const;
+	void sqr_root(NTL::GF2EX const& p, NTL::GF2EX& res) const;
 
-	// Helper
-	NTL::GF2EX calculate_fi(long i) const;
-	// Syndrom function for code word c
-	NTL::GF2EX calculate_sc(const NTL::vec_GF2& c) const;
-	// Feed with syndrom function
-	NTL::GF2EX calculate_vc(const NTL::GF2EX& sc) const;
-	// Error locator polynom
-	NTL::GF2EX calculate_sigma(NTL::vec_GF2 e, long spare_i = -1) const;
-	NTL::GF2EX calculate_small_omega(NTL::vec_GF2 e) const;
+	void calculate_sc(NTL::vec_GF2 const& c, NTL::GF2EX& sc) const;
+	void calculate_vc(NTL::GF2EX const& sc, NTL::GF2EX& vc) const;
 
-	std::vector<size_t> get_L_indices(std::vector<NTL::GF2E> const& l) const;
-	NTL::vec_GF2 calculate_error_vector(const std::vector<size_t>& L_indices) const;
+	void calculate_error(NTL::GF2EX const& poly, NTL::vec_GF2& e) const;
 
-	// L[a] *L[b]
-	size_t mul_L_elements(size_t a, size_t b);
+	// L[a] * L[b]
+	size_t mul_L_elements(size_t a, size_t b) const;
 	// L[a] ^ b
-	size_t power_L_elements(size_t a, long exp);
+	size_t power_L_elements(size_t a, long exp) const;
 
-	long dimension, non_root_points, errors;
+	long m, n, t;
+	NTL::GF2X f;
 	NTL::GF2EX g;
 	NTL::GF2E gen;
 	NTL::vec_GF2E L;
-	// H* is the H from the amsterdam paper
 	NTL::mat_GF2 H;
-	std::unique_ptr<NTL::GF2X> f;
-	NTL::GF2EX id;
 };
