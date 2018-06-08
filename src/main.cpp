@@ -1,21 +1,22 @@
 #include "bgc.hpp"
 #include "ncs.hpp"
 #include "hasher.hpp"
+#include "rand_helper.hpp"
 
 #include <csignal>
 #include <iostream>
 #include <ctime>
 #include <iomanip>
+
 using namespace NTL;
 
 int main(int, char**)
 {
-	SetSeed(ZZ(123456789));
+	SetSeed(ZZ(123456789));	// FIXME set secure random stream
 
 	int const m = 13,
 			  n = 1 << m,
 			  t = 117;
-
 	BGC bgc = BGC::create(m,n,t);
 	std::cout << "BGC generated" << std::endl;
 	NCS::KeyPair keys = NCS::keygen(bgc);
@@ -30,7 +31,7 @@ int main(int, char**)
 	NCS::decode(cipher, keys.sec, recovered);
 
 	std::cout << "HASH_OF(msg)       " << HASH_OF(msg) << std::endl
-			  // Should be 7577682492700538189 if no parameters were changed
+			  // HASH_OF(cypher) should be 9019764880683253672 if no parameters were changed
 			  << "HASH_OF(cypher)    " << HASH_OF(cipher) << std::endl
 			  << "HASH_OF(recovered) " << HASH_OF(recovered) << std::endl;
 

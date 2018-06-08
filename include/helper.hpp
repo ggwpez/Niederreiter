@@ -34,6 +34,8 @@ inline NTL::ZZ width(NTL::Vec<T> const& vec)
 	return ret;
 }
 
+long zero_coefficients(NTL::GF2EX&);
+
 //template<typename NTL::GF2E>
 void trace_construct(NTL::Mat<NTL::GF2E> const& m, NTL::Mat<NTL::GF2>& H);
 

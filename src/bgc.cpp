@@ -39,14 +39,6 @@ BGC BGC::create_with_field(long m, long n, long t, GF2X const& f)
 	return BGC::create_with_field_and_gp_poly(m, n, t, f, g);
 }
 
-BGC BGC::create_with_gp_poly(long m, long n, long t, GF2EX const& g)
-{
-	NTL::GF2X f;
-	calculate_f(m, f);
-
-	return BGC::create_with_field_and_gp_poly(m, n, t, f, g);
-}
-
 BGC BGC::create_with_field_and_gp_poly(long m, long n, long t, GF2X const& f, GF2EX const& g)
 {
 	check_args(m, n, t, f, g);
@@ -61,12 +53,27 @@ BGC BGC::create_with_field_and_gp_poly(long m, long n, long t, GF2X const& f, GF
 
 void BGC::calculate_f(long m, GF2X& f)
 {
-	f = NTL::BuildIrred_GF2X(m);	// TODO random
+	GF2X tmp = BuildIrred_GF2X(m);
+	BuildRandomIrred(f, tmp);
 }
 
 void BGC::calculate_g(long t, GF2EX& g)
 {
-	g = NTL::BuildIrred_GF2EX(t);	// TODO random
+	GF2EX tmp = BuildIrred_GF2EX(t);
+#if DEBUG
+	long tries = 0;
+#endif
+	do
+	{
+		BuildRandomIrred(g, tmp);
+#if DEBUG
+		++tries;
+#endif
+	} while (zero_coefficients(g) > 1);
+#if DEBUG
+	if (tries > 1)
+		std::clog << "Tries for g: " << tries << std::endl;
+#endif
 }
 
 void BGC::calculate_gen(GF2X f, GF2E& gen)
@@ -88,6 +95,7 @@ void BGC::calculate_H(long t, support_t L, GF2EX const& g, mat_GF2& H)
 
 	for (long row = 1; row < t; ++row)
 		for (long col = 0; col < n; ++col)
+			// TODO, if n==2^m the multiplication can be converted to an int addition and an array access
 			YZ[row][col] = YZ[row -1][col] *L[col];
 
 	for (int i = 0; i < t; ++i)
@@ -101,19 +109,18 @@ void BGC::calculate_H(long t, support_t L, GF2EX const& g, mat_GF2& H)
 void BGC::calculate_L(long n, GF2E const& gen, support_t& L)
 {
 	L.SetLength(n);
-	/*GF2X f_fix = f;
-	SetCoeff(f_fix, deg(f_fix), GF2::zero());
-	f_fix.normalize();
-	L[0] = gen = conv<GF2E>(f_fix);*/
 	L[0] = gen;
 
 	for (long i = 1; i < L.length() -1; ++i)
 		L[i] = L[i -1] *gen;
+
 	L[L.length() -1] = 0;
 }
 
 void BGC::check_args(long m, long n, long t, GF2X const& f, GF2EX const& g)
 {
+	if (n <= t)
+		throw std::invalid_argument("t < n");
 	if (! ((2 <= t) && (t <= ((1l << m) -1) /m)))
 		throw std::invalid_argument("t");
 	if (! ((m *t +1 <= n) && (n <= (1l << m))))

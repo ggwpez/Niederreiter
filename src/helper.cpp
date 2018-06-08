@@ -155,3 +155,13 @@ void calculate_sigma(const GF2EX& a, const GF2EX& b, const GF2EX& g, GF2EX& sigm
 
 	sigma = (G*G) +NTL::PowerXMod(1, g) *(C*C);	/// TODO optimize
 }
+
+long zero_coefficients(GF2EX& p)
+{
+	long sum = 0;
+
+	for (long i = 0; i < deg(p); ++i)
+		sum += IsZero(coeff(p, i));
+
+	return sum;
+}

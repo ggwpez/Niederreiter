@@ -21,7 +21,6 @@ public:
 
 	static BGC create(long m, long n, long t);
 	static BGC create_with_field(long m, long n, long t, NTL::GF2X const& f);
-	static BGC create_with_gp_poly(long m, long n, long t, NTL::GF2EX const& g);
 	static BGC create_with_field_and_gp_poly(long m, long n, long t, NTL::GF2X const& f, NTL::GF2EX const& g);
 
 	static void calculate_f(long m, NTL::GF2X& f);
