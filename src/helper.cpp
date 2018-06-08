@@ -56,35 +56,6 @@ GF2E call(GF2EX const& p, GF2E const& x)
 	return result;
 }
 
-vec_GF2E to_ext_field_poly(vec_GF2 const& vec, GF2X const& field)
-{
-	int m = deg(field);
-	if (vec.length() % m != 0)
-		throw std::runtime_error("Conversion impossible");
-
-	long t = vec.length() / m;
-	vec_GF2E result;
-	result.SetLength(t);
-	long count = 0;
-	for (long i = t - 1; i >= 0; --i)
-	{
-		for (long j = deg(field) - 1; j >= 0; --j)
-		{
-			long q = count >> 5;
-			long r = count & 0x1f;
-
-			long e = (conv<long>(vec[q]) >> r) & 1;
-			if (e == 1)
-			{
-				result[i] += generate_GF2E(long(i) << j);
-			}
-			count++;
-		}
-	}
-
-	return result;
-}
-
 mat_GF2 getLeftSubMatrix(mat_GF2 const& mat)
 {
 	if (mat.NumCols() <= mat.NumRows())
@@ -161,4 +132,26 @@ void trace_construct(NTL::Mat<GF2E> const& mat, NTL::Mat<GF2>& H)
 			for (long i = 0; i < m; ++i)	// i < deg(e) TODO
 				H.put(m *row +i, col, NTL::coeff(e, i));
 		}
+}
+
+void calculate_sigma(const GF2EX& a, const GF2EX& b, const GF2EX& g, GF2EX& sigma)
+{
+	NTL::GF2EX F = a, G = b, B = NTL::conv<NTL::GF2EX>("[[1]]"), C = NTL::GF2EX::zero();
+	long t = NTL::deg(b);
+
+	while (NTL::deg(G) > (t /2))
+	{
+		NTL::swap(F, G); NTL::swap(B, C);
+
+		while (NTL::deg(F) >= NTL::deg(G))
+		{
+			long j = NTL::deg(F) -NTL::deg(G);
+			auto h = NTL::LeadCoeff(F) /NTL::LeadCoeff(G);
+
+			F = F -h *NTL::PowerXMod(j, g) *G;
+			B = B -h *NTL::PowerXMod(j, g) *C;
+		}
+	}
+
+	sigma = (G*G) +NTL::PowerXMod(1, g) *(C*C);	/// TODO optimize
 }

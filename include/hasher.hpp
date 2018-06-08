@@ -12,6 +12,7 @@
 
 namespace std
 {
+	// From Boost
 	template <class T>
 	inline void hash_combine(std::size_t& seed, T const& v)
 	{

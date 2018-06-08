@@ -201,8 +201,10 @@ void BGC::sqr_root(GF2EX const& p, GF2EX& res) const
 	ZZ e = (ZZ(1) << (m *t -1));
 
 	res = PowerMod(p, e, g);
+#ifdef DEBUG
 	if (SqrMod(res, g) != p)
 		throw std::runtime_error("Could not find root");
+#endif
 }
 
 // L[a] * L[b] = gen^(a+1) * gen^(b+1) = gen^(a+b+2) = L[a+b+1]

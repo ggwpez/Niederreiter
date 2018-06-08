@@ -17,8 +17,9 @@ int main(int, char**)
 			  t = 117;
 
 	BGC bgc = BGC::create(m,n,t);
-	std::cout << bgc.to_str() << std::endl;
+	std::cout << "BGC generated" << std::endl;
 	NCS::KeyPair keys = NCS::keygen(bgc);
+	std::cout << "Key generated" << std::endl;
 
 	NTL::vec_GF2 msg, cipher, recovered;
 	msg.SetLength(n);
@@ -28,9 +29,10 @@ int main(int, char**)
 	NCS::encode(msg, keys.pub, cipher);
 	NCS::decode(cipher, keys.sec, recovered);
 
-	std::cout << "HASH_OF(msg)\n" << HASH_OF(msg)
-			  << "\nHASH_OF(cypher)\n" << HASH_OF(cipher)
-			  << "\nHASH_OF(msg')\n" << HASH_OF(recovered) << '\n';
+	std::cout << "HASH_OF(msg)       " << HASH_OF(msg)
+			  // Should be 7577682492700538189 if no parameters were changed
+			  << "\nHASH_OF(cypher)    " << HASH_OF(cipher)
+			  << "\nHASH_OF(recovered) " << HASH_OF(recovered) << '\n';
 
 	if (msg != recovered)
 		throw std::runtime_error("Decoding error");

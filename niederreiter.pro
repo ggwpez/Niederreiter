@@ -24,8 +24,9 @@ HEADERS += \
 	include/bgc.hpp \
 	include/ncs.hpp
 
+INCLUDEPATH += include/
+
 QMAKE_CXXFLAGS += -std=c++17
 QMAKE_CXXFLAGS_WARN_ON += -Werror
 QMAKE_LIBS += -lntl -lgmp -lm -lpthread
 QMAKE_CXXFLAGS_DEBUG += -DDEBUG -DNTL_RANGE_CHECK
-INCLUDEPATH += include/

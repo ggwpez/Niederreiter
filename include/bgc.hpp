@@ -37,7 +37,7 @@ public:
 	NTL::ZZ order() const;
 
 	void syndrom_decode(NTL::vec_GF2 const& c, NTL::vec_GF2& e) const;
-	NTL::GF2EX berlekamp_massey(NTL::vec_GF2 const& c) const;
+	//NTL::GF2EX berlekamp_massey(NTL::vec_GF2 const& c) const;
 
 	std::string to_str() const;
 
