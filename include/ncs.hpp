@@ -2,27 +2,48 @@
 
 #include "perm_gf2.hpp"
 #include "bgc.hpp"
+#include "serializable.hpp"
 #include <NTL/mat_GF2.h>
 
 /// Niederreiter Cryptosystem
 namespace NCS
 {
-	struct SecKey
+	struct SecKey : ISerializable
 	{
+		SecKey() = default;
+		SecKey(NTL::mat_GF2 const& Si, perm_GF2 const& p, BGC const& bgc);
+
 		NTL::mat_GF2 Si;
 		perm_GF2 p;
 		BGC bgc;
+
+		virtual void serialize(std::ostream&) const override;
+		virtual	void deserialize(std::istream&) override;
 	};
 
-	struct PubKey
+	struct PubKey : ISerializable
 	{
+		PubKey() = default;
+		PubKey(NTL::mat_GF2 const& h);
+
 		NTL::mat_GF2 h;
+
+		virtual void serialize(std::ostream&) const override;
+		virtual void deserialize(std::istream&) override;
 	};
 
-	struct KeyPair
+	struct KeyPair : ISerializable
 	{
-		SecKey sec;
-		PubKey pub;
+		KeyPair() = default;
+		KeyPair(SecKey const&, PubKey const&);
+
+		SecKey m_sk;
+		PubKey m_pk;
+
+		void reconstruct_pk();
+
+		virtual void serialize(std::ostream&) const override;
+		virtual void deserialize(std::istream&) override;
 	};
 
 	KeyPair keygen(BGC const&);

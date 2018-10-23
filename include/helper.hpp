@@ -1,8 +1,10 @@
 #pragma once
 #include "printer.hpp"
 #include <NTL/mat_GF2.h>
+#include <NTL/GF2.h>
 #include <NTL/GF2X.h>
 #include <NTL/GF2EX.h>
+#include <NTL/vec_GF2.h>
 #include <NTL/matrix.h>
 #include <NTL/ZZ.h>
 #include <cassert>
@@ -10,17 +12,25 @@
 
 NTL::GF2E call(NTL::GF2EX const& p, NTL::GF2E const& x);
 // Make Polynomial monic
-void monice(NTL::GF2EX poly, NTL::GF2EX& ret);
-NTL::GF2EX monice(NTL::GF2EX const&poly);
+void monic(NTL::GF2EX poly, NTL::GF2EX& ret);
+NTL::GF2EX monic(NTL::GF2EX const&poly);
 
 NTL::mat_GF2 create_rand_permutation(size_t s);
 
 NTL::mat_GF2 getLeftSubMatrix(NTL::mat_GF2 const& mat);
 NTL::mat_GF2 getRightSubMatrix(NTL::mat_GF2 const& mat);
 
+NTL::GF2 fast_dot_product(NTL::vec_GF2 const& a, NTL::vec_GF2 const& b, long off_b);
+void mat_mul_right_compact(NTL::mat_GF2 const& mat, NTL::vec_GF2 const& vec, NTL::vec_GF2& out);
+
 NTL::mat_GF2 mat_merge_colls(NTL::mat_GF2 const& a, NTL::mat_GF2 const& b);
 NTL::mat_GF2 mat_merge_ID_left(NTL::mat_GF2 const& b);
 NTL::mat_GF2 mat_merge_ID_right(NTL::mat_GF2 const& a);
+
+void serialize(std::ostream&, NTL::mat_GF2 const&);
+void deserialize(std::istream&t, NTL::mat_GF2&);
+
+long log2_coeff(long const n, long const t);
 
 template<typename T>
 inline NTL::ZZ width(NTL::Vec<T> const& vec)
@@ -34,7 +44,7 @@ inline NTL::ZZ width(NTL::Vec<T> const& vec)
 	return ret;
 }
 
-long zero_coefficients(NTL::GF2EX&);
+long count_coefficients(NTL::GF2EX&, NTL::GF2E const& e);
 
 //template<typename NTL::GF2E>
 void trace_construct(NTL::Mat<NTL::GF2E> const& m, NTL::Mat<NTL::GF2>& H);

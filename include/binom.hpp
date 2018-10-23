@@ -4,6 +4,10 @@
 
 namespace Binom
 {
-	void encode(long const n, long const t, char const* data, NTL::vec_GF2& out);
-	void decode(const long n, const long t, NTL::vec_GF2 const& in, char*& out, long& size_bytes);
+	NTL::ZZ coeff(NTL::ZZ const& n, NTL::ZZ k);
+
+	void encode(long const n, long const t, NTL::ZZ x, NTL::vec_GF2& out);
+	void encode(long const n, long const t, const char* data, NTL::vec_GF2& out);
+	void decode(long const n, long const t, NTL::vec_GF2 const& in, NTL::ZZ& out);
+	void decode(long const n, long const t, NTL::vec_GF2 const& in, char*& out);
 }

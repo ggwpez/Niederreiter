@@ -1,6 +1,9 @@
 #pragma once
 
 #include "printer.hpp"
+#include "serializable.hpp"
+
+#include <NTL/RR.h>
 #include <NTL/GF2E.h>
 #include <NTL/GF2EX.h>
 #include <NTL/mat_GF2E.h>
@@ -13,7 +16,7 @@
 typedef NTL::vec_GF2E support_t;
 
 // Binary Goppa Code
-class BGC
+class BGC : public ISerializable
 {
 public:
 	BGC() = default;
@@ -31,7 +34,14 @@ public:
 	static void calculate_L(long n, NTL::GF2E const& gen, support_t& L);
 
 	static void check_args(long m, long n, long t, NTL::GF2X const& f, NTL::GF2EX const& g);
+	// Parameter k of the Code
 	long k() const;
+	// Returns the length of an encoded message
+	long l() const;
+	// Returns how many user data bits are in every encoded message
+	long encoded_bits() const;
+	// Returns encoded_databits() /l()
+	NTL::RR encoded_bits_density() const;
 	// Returns the number of elements of the Galois field
 	NTL::ZZ order() const;
 
@@ -39,6 +49,8 @@ public:
 	//NTL::GF2EX berlekamp_massey(NTL::vec_GF2 const& c) const;
 
 	std::string to_str() const;
+	virtual void serialize(std::ostream&) const override;
+	virtual void deserialize(std::istream&) override;
 
 	void sqr_root(NTL::GF2EX const& p, NTL::GF2EX& res) const;
 
@@ -52,7 +64,7 @@ public:
 	// L[a] ^ b
 	size_t power_L_elements(size_t a, long exp) const;
 
-	long m, n, t;
+	uint32_t m, n, t;
 	NTL::GF2X f;
 	NTL::GF2EX g;
 	NTL::GF2E gen;

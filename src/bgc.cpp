@@ -69,7 +69,8 @@ void BGC::calculate_g(long t, GF2EX& g)
 #if DEBUG
 		++tries;
 #endif
-	} while (zero_coefficients(g) > 1);
+	} while (count_coefficients(g, GF2E::zero()) > 1				// Not more than one 0 coefficient
+		  && count_coefficients(g, conv<GF2E>("[1]")) == deg(g));	// Not all coefficients should be one
 #if DEBUG
 	if (tries > 1)
 		std::clog << "Tries for g: " << tries << std::endl;
@@ -95,7 +96,7 @@ void BGC::calculate_H(long t, support_t L, GF2EX const& g, mat_GF2& H)
 
 	for (long row = 1; row < t; ++row)
 		for (long col = 0; col < n; ++col)
-			// TODO, if n==2^m the multiplication can be converted to an int addition and an array access
+			// TODO, if (n==2^m) the multiplication can be converted to an int addition and an array access
 			YZ[row][col] = YZ[row -1][col] *L[col];
 
 	for (int i = 0; i < t; ++i)
@@ -135,6 +136,7 @@ void BGC::calculate_error(GF2EX const& poly, vec_GF2& e) const
 {
 	e.SetLength(n);
 
+	// TODO speedup
 	for (long i = 0; i < e.length(); ++i)
 	{
 		GF2E y = call(poly, L[i]);
@@ -190,6 +192,23 @@ long BGC::k() const
 	return n -t *m;
 }
 
+long BGC::l() const
+{
+	return n -k();
+}
+
+long BGC::encoded_bits() const
+{
+	return log2_coeff(n, t);
+}
+
+RR BGC::encoded_bits_density() const
+{
+	RRPush guard;
+	RR::SetPrecision(5);
+	return to_RR(encoded_bits()) /l();
+}
+
 void BGC::syndrom_decode(vec_GF2 const& c, vec_GF2& e) const
 {
 	GF2EX sc, vc, elp;
@@ -197,7 +216,7 @@ void BGC::syndrom_decode(vec_GF2 const& c, vec_GF2& e) const
 	calculate_sc(c, sc);
 	calculate_vc(sc, vc);
 	calculate_sigma(vc, g, g, elp);
-	monice(elp, elp);				// Optional
+	monic(elp, elp);				// Optional
 
 	calculate_error(elp, e);
 }
@@ -236,11 +255,40 @@ std::string BGC::to_str() const
 	std::ostringstream ss;
 
 	ss << "[n,k,d]-Code = [" << (uint64_t(1) << m) << ',' << k() << ',' << (2*t +1) << "]" << std::endl
-	   << "F(2^" << m << ") = " << "F(2)[x]/" << print(f) << std::endl
-	   << "Goppa Polynomial: " << print(g) << std::endl
-	   << "Generator: " << print(gen) << std::endl
-	   << "Support={ " << print(L) << '}'
-	   << "\nH (" << H.NumRows() << 'x' << H.NumCols() << ")\n";
+	   << "Message length = " << l() << " bits, user data per message = " << encoded_bits() << " bits, niederreiter overhead = " << (1 -encoded_bits_density()) *100 << '%';
+	   //<< "F(2^" << m << ") = " << "F(2)[x]/" << print(f) << std::endl
+	   //<< "Goppa Polynomial: " << print(g) << std::endl
+	   //<< "Generator: " << print(gen) << std::endl
+	   //<< "Support={ " << print(L) << '}'
+	   //<< "\nH (" << H.NumRows() << 'x' << H.NumCols() << ")\n";
 
 	return ss.str();
+}
+
+void BGC::serialize(std::ostream& out) const
+{
+	out.write(reinterpret_cast<char const*>(&m), 4);
+	out.write(reinterpret_cast<char const*>(&n), 4);
+	out.write(reinterpret_cast<char const*>(&t), 4);
+
+	::serialize(out, H);
+
+	uint32_t bc = f.xrep.length();
+	out.write(reinterpret_cast<char const*>(&bc), 4);
+	out.write(reinterpret_cast<char const*>(f.xrep.elts()), f.xrep.length() *sizeof(long));
+}
+
+void BGC::deserialize(std::istream& in)
+{
+	in.read(reinterpret_cast<char*>(&m), 4);
+	in.read(reinterpret_cast<char*>(&n), 4);
+	in.read(reinterpret_cast<char*>(&t), 4);
+
+	::deserialize(in, H);
+
+	//f.Set
+	uint32_t bc;
+	in.read(reinterpret_cast<char*>(&bc), 4);
+	f.SetLength(bc);
+	in.read(reinterpret_cast<char*>(f.xrep.elts()), f.xrep.length() *sizeof (long));
 }
