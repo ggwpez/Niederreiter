@@ -236,36 +236,3 @@ long log2_coeff(const long n, const long t)
 
 	return conv<long>(z);
 }
-
-void serialize(std::ostream& out, const mat_GF2& mat)
-{
-	uint32_t rows = mat.NumRows(),
-			 cols = mat.NumCols();
-
-	out.write(reinterpret_cast<char*>(&rows), 4);
-	out.write(reinterpret_cast<char*>(&cols), 4);
-
-	for (int i = 0; i < mat.NumRows(); ++i)
-	{
-		NTL::Vec<NTL::GF2> const& vec = mat[i];
-		out.write(reinterpret_cast<char const*>(vec.rep.elts()), vec._len >> 3);
-	}
-}
-
-void deserialize(std::istream& in, mat_GF2& mat)
-{
-	uint32_t rows, cols;
-	in.read(reinterpret_cast<char*>(&rows), 4);
-	in.read(reinterpret_cast<char*>(&cols), 4);
-
-	std::cerr << "R " << rows << " C " << cols << std::endl;
-	mat = mat_GF2(INIT_SIZE, rows, cols);
-
-	for (int i = 0; i < rows; ++i)
-	{
-		NTL::Vec<NTL::GF2> vec;
-		vec.FixLength(cols);
-		assert(vec._len == cols);
-		in.read(reinterpret_cast<char*>(vec.rep.elts()), vec._len >> 3);
-	}
-}

@@ -1,9 +1,13 @@
 #include "bgc.hpp"
 #include "helper.hpp"
+#include "serializer.hpp"
+
 #include <NTL/mat_GF2E.h>
 #include <NTL/GF2XFactoring.h>
 #include <NTL/GF2EX.h>
 #include <NTL/GF2EXFactoring.h>
+
+#include <iterator>
 #include <cassert>
 #include <iostream>
 #include <algorithm>
@@ -267,28 +271,27 @@ std::string BGC::to_str() const
 
 void BGC::serialize(std::ostream& out) const
 {
-	out.write(reinterpret_cast<char const*>(&m), 4);
-	out.write(reinterpret_cast<char const*>(&n), 4);
-	out.write(reinterpret_cast<char const*>(&t), 4);
+	::serialize(out, m);
+	::serialize(out, n);
+	::serialize(out, t);
 
 	::serialize(out, H);
 
-	uint32_t bc = f.xrep.length();
-	out.write(reinterpret_cast<char const*>(&bc), 4);
-	out.write(reinterpret_cast<char const*>(f.xrep.elts()), f.xrep.length() *sizeof(long));
+	::serialize(out, f);
+	::serialize(out, g);
+	::serialize(out, L);
 }
 
 void BGC::deserialize(std::istream& in)
 {
-	in.read(reinterpret_cast<char*>(&m), 4);
-	in.read(reinterpret_cast<char*>(&n), 4);
-	in.read(reinterpret_cast<char*>(&t), 4);
+	::deserialize(in, m);
+	::deserialize(in, n);
+	::deserialize(in, t);
 
 	::deserialize(in, H);
 
-	//f.Set
-	uint32_t bc;
-	in.read(reinterpret_cast<char*>(&bc), 4);
-	f.SetLength(bc);
-	in.read(reinterpret_cast<char*>(f.xrep.elts()), f.xrep.length() *sizeof (long));
+	::deserialize(in, f);
+	GF2E::init(f);
+	::deserialize(in, g);
+	::deserialize(in, L);
 }

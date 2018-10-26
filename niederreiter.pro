@@ -14,7 +14,8 @@ SOURCES += \
 	src/perm_gf2.cpp \
 	src/hasher.cpp \
 	src/ncs.cpp \
-	src/binom.cpp
+	src/binom.cpp \
+	src/serializer.cpp
 
 HEADERS += \
 	include/printer.hpp \
@@ -26,11 +27,13 @@ HEADERS += \
 	include/bgc.hpp \
 	include/ncs.hpp \
 	include/binom.hpp \
-    include/serializable.hpp
+	include/serializable.hpp \
+	include/serializer.hpp
 
 INCLUDEPATH += include/
 
 QMAKE_CXXFLAGS += -std=c++11
 QMAKE_LIBS += -lntl -lgmp -lm -lpthread
 QMAKE_CXXFLAGS_DEBUG += -DDEBUG -DNTL_RANGE_CHECK
-QMAKE_CXXFLAGS_RELEASE += -Werror -Wall -march=native -msse4.2 -mpopcnt
+QMAKE_CXXFLAGS_RELEASE += -Wall -march=native -msse4.2 -mpopcnt
+#-Werror

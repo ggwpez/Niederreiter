@@ -27,9 +27,6 @@ NTL::mat_GF2 mat_merge_colls(NTL::mat_GF2 const& a, NTL::mat_GF2 const& b);
 NTL::mat_GF2 mat_merge_ID_left(NTL::mat_GF2 const& b);
 NTL::mat_GF2 mat_merge_ID_right(NTL::mat_GF2 const& a);
 
-void serialize(std::ostream&, NTL::mat_GF2 const&);
-void deserialize(std::istream&t, NTL::mat_GF2&);
-
 long log2_coeff(long const n, long const t);
 
 template<typename T>

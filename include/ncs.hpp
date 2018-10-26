@@ -24,9 +24,10 @@ namespace NCS
 	struct PubKey : ISerializable
 	{
 		PubKey() = default;
-		PubKey(NTL::mat_GF2 const& h);
+		PubKey(NTL::mat_GF2 const& h, uint32_t n, uint32_t t);
 
 		NTL::mat_GF2 h;
+		uint32_t n, t;
 
 		virtual void serialize(std::ostream&) const override;
 		virtual void deserialize(std::istream&) override;

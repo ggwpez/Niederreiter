@@ -1,5 +1,6 @@
 #include "binom.hpp"
 #include "helper.hpp"
+#include "printer.hpp"
 
 #include <cassert>
 #include <NTL/ZZ.h>

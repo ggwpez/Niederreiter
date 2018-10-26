@@ -4,6 +4,7 @@
 #include "helper.hpp"
 #include "tests.hpp"
 #include "rand_helper.hpp"
+#include "serializer.hpp"
 #include "binom.hpp"
 
 #include <iostream>
@@ -35,12 +36,14 @@ static int64_t timer_get_elapsed()
 #define mENC 2
 #define mDEC 3
 #define mCPK 4
+#define mINF 5
 
 static struct
 {
 	long m = -1,t = -1, n = -1;
 	int mode = mERR;
 
+	std::istream* is = &std::cin;
 	std::string path_key;
 
 	NCS::KeyPair* key = nullptr;
@@ -56,9 +59,11 @@ static struct option long_options[] =
 	{ "enc",    no_argument, 0, 'e' },
 	{ "dec",    no_argument, 0, 'd' },
 	{ "cpk",   	no_argument, 0, 'c' },
+	{ "sinf",   no_argument, 0, 's' },
 	//{ "verbosity",  optional_argument, 0, 'v' },
 
 	{ "key",	required_argument, 0, 'k'},
+	{ "input",	required_argument, 0, 'i'},
 
 	/* NULL descriptor */
 	{0, 0, 0, 0}
@@ -78,7 +83,7 @@ void parse_options(int argc, char** argv)
 	{
 		/* getopt_long stores the option index here. */
 		int option_index = 0;
-		c = getopt_long(argc, argv, "hgedck:m:n:t:", long_options, &option_index);
+		c = getopt_long(argc, argv, "hgedck:m:n:t:i:s", long_options, &option_index);
 
 		/* Detect the end of the options. */
 		if (c == -1)
@@ -113,6 +118,10 @@ void parse_options(int argc, char** argv)
 			{
 				state.mode = mCPK;
 			} break;
+			case 's':
+			{
+				state.mode = mINF;
+			} break;
 			case 'k':
 			{
 				state.path_key = std::string(optarg);
@@ -128,6 +137,24 @@ void parse_options(int argc, char** argv)
 			case 't':
 			{
 				state.t = std::strtol(optarg, nullptr, 10);
+			} break;
+			case 'i':
+			{
+				std::string path(optarg);
+
+				if (path != "-")	// not stdin
+				{
+					std::ifstream* fs = new std::ifstream(path, std::ios::binary);
+
+					if (! fs->is_open())
+					{
+						std::cerr << "Could not find file '" << path << "'" << std::endl;
+						free(fs);
+						exit(EXIT_FAILURE);
+					}
+					else
+						state.is = fs;
+				}
 			} break;
 			case '?': default:
 			{
@@ -167,11 +194,11 @@ int main(int argc, char** argv)
 		NCS::KeyPair keys = NCS::keygen(bgc);
 
 		keys.m_sk.serialize(std::cout);
-		std::flush(std::cout);
 	}
 	else if (state.mode == mENC ||
 			 state.mode == mDEC ||
-			 state.mode == mCPK)
+			 state.mode == mCPK ||
+			 state.mode == mINF)
 	{
 		state.key = new NCS::KeyPair();
 		std::ifstream fs = open_key();
@@ -180,19 +207,45 @@ int main(int argc, char** argv)
 		{
 			state.key->m_pk.deserialize(fs);
 
+			NTL::vec_GF2 err, enc_err;
+			char* msg = new char[state.key->m_pk.n +1]();
+			state.is->readsome(msg, state.key->m_pk.n);
+			// 23 byte
+			Binom::encode(state.key->m_pk.n, state.key->m_pk.t, msg, err);
+			NCS::encode(err, state.key->m_pk, enc_err);
 
+			::serialize(std::cout, enc_err);
+
+			delete [] msg;
 		}
 		else if(state.mode == mDEC)		// DEC
 		{
 			state.key->m_sk.deserialize(fs);
 
 			// Do decryption
+			char* dec_msg = new char[state.key->m_pk.n +1]();
 
+			NTL::vec_GF2 enc_err, dec_err;
+			::deserialize(*state.is, enc_err);
+			NCS::decode(enc_err, state.key->m_sk, dec_err);
+			Binom::decode(state.key->m_sk.bgc.n, state.key->m_sk.bgc.t, dec_err, dec_msg);
+
+			std::cout << dec_msg;
+
+			delete [] dec_msg;
+		}
+		else if (state.mode == mINF)
+		{
+			state.key->m_sk.deserialize(fs);
+
+			std::cout << state.key->m_sk.bgc.to_str() << '\n';
 		}
 		else							// CPK
 		{
 			state.key->m_sk.deserialize(fs);
 			state.key->reconstruct_pk();		// spooky
+
+			state.key->m_pk.serialize(std::cout);
 		}
 	}
 	else
@@ -200,6 +253,8 @@ int main(int argc, char** argv)
 		std::cerr << "No operation mode specified, use --help for help" << std::endl;
 		return 1;
 	}
+
+	std::cout.flush();
 	return 0;
 
 	SetSeed(ZZ(std::time(nullptr)));	// FIXME use secure random stream
