@@ -4,15 +4,12 @@ using namespace NTL;
 
 void serialize(std::ostream& out, const uint32_t& val)
 {
-	uint32_t cpy = val;
-	out.write(reinterpret_cast<char const*>(&cpy), 4);
+	out.write(reinterpret_cast<char const*>(std::addressof(val)), 4);
 }
 
 void deserialize(std::istream& in, uint32_t& val)
 {
-	uint32_t cpy;
-	in.read(reinterpret_cast<char*>(&cpy), 4);
-	val = cpy;
+	in.read(reinterpret_cast<char*>(std::addressof(val)), 4);
 }
 
 void serialize(std::ostream& out, const ZZ& val)
@@ -46,10 +43,20 @@ void deserialize(std::istream& in, ZZ& val)
 template<typename T>
 void serialize(std::ostream& out, const Vec<T>& vec)
 {
-	serialize(out, uint32_t(vec.length()));
+	uint32_t l = uint32_t(vec.length());
+	serialize(out, l);
 
-	for (uint32_t i = 0; i < vec.length(); ++i)
+	for (uint32_t i = 0; i < l; ++i)
 		serialize(out, vec[i]);
+}
+
+template<>
+void serialize<GF2>(std::ostream& out, const Vec<GF2>& vec)
+{
+	uint32_t l = uint32_t(vec.length());
+	serialize(out, l);
+
+	out.write(reinterpret_cast<char const*>(vec.rep.elts()), (vec._len +7) >> 3);
 }
 
 template<typename T>
@@ -68,6 +75,16 @@ void deserialize(std::istream& in, Vec<T>& vec)
 	}
 }
 
+template<>
+void deserialize<GF2>(std::istream& in, Vec<GF2>& vec)
+{
+	uint32_t l;
+	deserialize(in, l);
+	vec.FixLength(l);
+
+	in.read(reinterpret_cast<char*>(vec.rep.elts()), (vec._len +7) >> 3);
+}
+
 template<typename T>
 void serialize(std::ostream& out, const NTL::Mat<T>& mat)
 {
@@ -77,8 +94,7 @@ void serialize(std::ostream& out, const NTL::Mat<T>& mat)
 	serialize(out, c);
 
 	for (long i = 0; i < r; ++i)
-		for (long j = 0; j < c; ++j)
-			serialize(out, mat[i][j]);
+		serialize(out, mat[i]);
 }
 
 template<typename T>
@@ -90,25 +106,30 @@ void deserialize(std::istream& in, NTL::Mat<T>& mat)
 
 	mat.SetDims(r,c);
 	for (long i = 0; i < r; ++i)
-		for (long j = 0; j < c; ++j)
+	{
+		Vec<T> tmp;
+		deserialize(in, tmp);
+		mat[i] = tmp;
+	}
+		/*for (long j = 0; j < c; ++j)
 		{
 			T tmp;
 			deserialize(in, tmp);
 			mat.put(i, j, tmp);
 			// deserialize(in, mat[i][j]); // why not
-		}
+		}*/
 }
 
 void serialize(std::ostream& out, const GF2& val)
 {
-	serialize(out, conv<ZZ>(val));
+	out << char(IsOne(val));
 }
 
 void deserialize(std::istream& in, GF2& val)
 {
-	ZZ tmp;
-	deserialize(in, tmp);
-	val = conv<GF2>(tmp);
+	char boolean;
+	in >> boolean;
+	val = boolean;
 }
 
 void serialize(std::ostream& out, const GF2E& val)
@@ -171,11 +192,9 @@ void deserialize(std::istream& in, GF2EX& val)
 		deserialize(in, val[i]);
 }
 
-template void serialize<NTL::GF2>(std::ostream& out, NTL::Vec<NTL::GF2> const&);
 template void serialize<NTL::GF2E>(std::ostream& out, NTL::Vec<NTL::GF2E> const&);
 template void serialize<NTL::GF2EX>(std::ostream& out, NTL::Vec<NTL::GF2EX> const&);
 
-template void deserialize<NTL::GF2>(std::istream&, NTL::Vec<NTL::GF2>&);
 template void deserialize<NTL::GF2E>(std::istream&, NTL::Vec<NTL::GF2E>&);
 template void deserialize<NTL::GF2EX>(std::istream&, NTL::Vec<NTL::GF2EX>&);
 

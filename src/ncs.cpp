@@ -60,16 +60,16 @@ void NCS::SecKey::serialize(std::ostream& out) const
 {
 	bgc.serialize(out);
 
-	::serialize(out, Si);
 	::serialize(out, p);
+	::serialize(out, Si);
 }
 
 void NCS::SecKey::deserialize(std::istream& in)
 {
 	bgc.deserialize(in);
 
-	::deserialize(in, Si);
 	::deserialize(in, p);
+	::deserialize(in, Si);
 }
 
 NCS::PubKey::PubKey(const mat_GF2& h, uint32_t n, uint32_t t)
@@ -80,16 +80,16 @@ NCS::PubKey::PubKey(const mat_GF2& h, uint32_t n, uint32_t t)
 
 void NCS::PubKey::serialize(std::ostream& out) const
 {
-	out.write(reinterpret_cast<char const*>(&n), 4);
-	out.write(reinterpret_cast<char const*>(&t), 4);
+	::serialize(out, n);
+	::serialize(out, t);
 
 	::serialize(out, h);
 }
 
 void NCS::PubKey::deserialize(std::istream& in)
 {
-	in.read(reinterpret_cast<char*>(&n), 4);
-	in.read(reinterpret_cast<char*>(&t), 4);
+	::deserialize(in, n);
+	::deserialize(in, t);
 
 	::deserialize(in, h);
 }

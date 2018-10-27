@@ -36,7 +36,8 @@ static int64_t timer_get_elapsed()
 #define mENC 2
 #define mDEC 3
 #define mCPK 4
-#define mINF 5
+#define mSINF 5
+#define mPINF 5
 
 static struct
 {
@@ -53,28 +54,20 @@ static struct option long_options[] =
 {
 	/* Flags */
 	{ "help",	    no_argument, 0, 'h'},
-	//{ "create-key", no_argument, &state.mode, mCREATE_KEY },
 
-	{ "gen",    no_argument, 0, 'g' },
-	{ "enc",    no_argument, 0, 'e' },
-	{ "dec",    no_argument, 0, 'd' },
-	{ "cpk",   	no_argument, 0, 'c' },
-	{ "sinf",   no_argument, 0, 's' },
-	//{ "verbosity",  optional_argument, 0, 'v' },
+	{ "gen",		no_argument, 0, 'g' },
+	{ "enc",		no_argument, 0, 'e' },
+	{ "dec",		no_argument, 0, 'd' },
+	{ "cpk",		no_argument, 0, 'c' },
+	{ "sk-info",	no_argument, 0, 's' },
+	{ "pk-info",	no_argument, 0, 'p' },
 
-	{ "key",	required_argument, 0, 'k'},
-	{ "input",	required_argument, 0, 'i'},
+	{ "key",		required_argument, 0, 'k' },
+	{ "input",		required_argument, 0, 'i' },
 
 	/* NULL descriptor */
 	{0, 0, 0, 0}
 };
-
-// Input from stdin
-// Output to stdout
-// --gen -m 13 -t 117		// Writes sk to stdout
-// --enc --key=key.pk		// Encrypts stdin
-// --dec --key=key.sk		// Decryptis stdin
-// --cpk --key=key.sk		// Calculates pk for given sk
 
 void parse_options(int argc, char** argv)
 {
@@ -83,7 +76,7 @@ void parse_options(int argc, char** argv)
 	{
 		/* getopt_long stores the option index here. */
 		int option_index = 0;
-		c = getopt_long(argc, argv, "hgedck:m:n:t:i:s", long_options, &option_index);
+		c = getopt_long(argc, argv, "hgedck:m:n:t:i:sp", long_options, &option_index);
 
 		/* Detect the end of the options. */
 		if (c == -1)
@@ -120,7 +113,11 @@ void parse_options(int argc, char** argv)
 			} break;
 			case 's':
 			{
-				state.mode = mINF;
+				state.mode = mSINF;
+			} break;
+			case 'p':
+			{
+				state.mode = mPINF;
 			} break;
 			case 'k':
 			{
@@ -180,6 +177,7 @@ std::ifstream open_key()
 
 int main(int argc, char** argv)
 {
+	SetSeed(ZZ(std::time(nullptr)));	// FIXME use secure random stream
 	parse_options(argc, argv);
 
 	if (state.mode == mGEN)	// KEYGEN
@@ -195,22 +193,18 @@ int main(int argc, char** argv)
 
 		keys.m_sk.serialize(std::cout);
 	}
-	else if (state.mode == mENC ||
-			 state.mode == mDEC ||
-			 state.mode == mCPK ||
-			 state.mode == mINF)
+	else if (state.mode == mENC || state.mode == mDEC || state.mode == mCPK || state.mode == mSINF || state.mode == mPINF)
 	{
 		state.key = new NCS::KeyPair();
 		std::ifstream fs = open_key();
 
-		/**/ if (state.mode == mENC)	// ENC
+		if (state.mode == mENC)	// ENC
 		{
 			state.key->m_pk.deserialize(fs);
 
 			NTL::vec_GF2 err, enc_err;
 			char* msg = new char[state.key->m_pk.n +1]();
 			state.is->readsome(msg, state.key->m_pk.n);
-			// 23 byte
 			Binom::encode(state.key->m_pk.n, state.key->m_pk.t, msg, err);
 			NCS::encode(err, state.key->m_pk, enc_err);
 
@@ -222,8 +216,7 @@ int main(int argc, char** argv)
 		{
 			state.key->m_sk.deserialize(fs);
 
-			// Do decryption
-			char* dec_msg = new char[state.key->m_pk.n +1]();
+			char* dec_msg;
 
 			NTL::vec_GF2 enc_err, dec_err;
 			::deserialize(*state.is, enc_err);
@@ -234,19 +227,28 @@ int main(int argc, char** argv)
 
 			delete [] dec_msg;
 		}
-		else if (state.mode == mINF)
+		else if (state.mode == mSINF)
 		{
 			state.key->m_sk.deserialize(fs);
 
 			std::cout << state.key->m_sk.bgc.to_str() << '\n';
 		}
-		else							// CPK
+		else if (state.mode == mPINF)
+		{
+			state.key->m_pk.deserialize(fs);
+
+			std::cout << "PK-INFO not yet implemented" << std::endl;
+			//std::cout << state.key->m_sk.bgc.to_str() << '\n';
+		}
+		else if (state.mode == mCPK)							// CPK
 		{
 			state.key->m_sk.deserialize(fs);
 			state.key->reconstruct_pk();		// spooky
 
 			state.key->m_pk.serialize(std::cout);
 		}
+		else
+			exit(-1);
 	}
 	else
 	{
@@ -257,11 +259,9 @@ int main(int argc, char** argv)
 	std::cout.flush();
 	return 0;
 
-	SetSeed(ZZ(std::time(nullptr)));	// FIXME use secure random stream
-
-	int const m = 13,
+	int const m = 10,
 			  n = (1 << m),	// 8192
-			  t = 117;
+			  t = 30;
 
 	timer_start();
 	BGC bgc = BGC::create(m,n,t);
@@ -278,7 +278,7 @@ int main(int argc, char** argv)
 		//ZZ x = ; /*conv<ZZ>(Binom::coeff(ZZ(n), ZZ(t)) -1);*///RandomBits_ZZ(879);
 		//std::cout << "Testing with\n" << x << '\n';
 		//BytesFromZZ(reinterpret_cast<unsigned char*>(msg), x, n);		// FIXME
-		std::strcpy(msg, "TEST DATA GOES HERE");
+		std::strcpy(msg, "TEST DATA\n");
 	}
 
 	NTL::vec_GF2 err, enc_err, dec_err;
@@ -297,6 +297,7 @@ int main(int argc, char** argv)
 
 	std::cout << "msg            " << msg << std::endl
 			  << "dec_msg        " << dec_msg << std::endl;
+	std::cout << "enc_err\n" << enc_err << '\n';
 			  //<< "err             " << print(err) << std::endl
 			  //<< "enc_err         " << print(enc_err) << std::endl
 			  //<< "dec_err         " << print(dec_err) << std::endl
@@ -312,3 +313,4 @@ int main(int argc, char** argv)
 	delete msg;
 	return 0;
 }
+

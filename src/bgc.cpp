@@ -259,12 +259,12 @@ std::string BGC::to_str() const
 	std::ostringstream ss;
 
 	ss << "[n,k,d]-Code = [" << (uint64_t(1) << m) << ',' << k() << ',' << (2*t +1) << "]" << std::endl
-	   << "Message length = " << l() << " bits, user data per message = " << encoded_bits() << " bits, niederreiter overhead = " << (1 -encoded_bits_density()) *100 << '%';
-	   //<< "F(2^" << m << ") = " << "F(2)[x]/" << print(f) << std::endl
-	   //<< "Goppa Polynomial: " << print(g) << std::endl
-	   //<< "Generator: " << print(gen) << std::endl
-	   //<< "Support={ " << print(L) << '}'
-	   //<< "\nH (" << H.NumRows() << 'x' << H.NumCols() << ")\n";
+	   << "Message length = " << l() << " bits, user data per message = " << encoded_bits() << " bits, niederreiter overhead = " << (1 -encoded_bits_density()) *100 << '%'
+	   << "F(2^" << m << ") = " << "F(2)[x]/" << print(f) << std::endl
+	   << "Goppa Polynomial: " << print(g) << std::endl
+	   << "Generator: " << print(gen) << std::endl
+	   << "Support={ " << print(L) << '}'
+	   << "\nH (" << H.NumRows() << 'x' << H.NumCols() << ")\n";
 
 	return ss.str();
 }
@@ -280,6 +280,7 @@ void BGC::serialize(std::ostream& out) const
 	::serialize(out, f);
 	::serialize(out, g);
 	::serialize(out, L);
+	::serialize(out, gen);
 }
 
 void BGC::deserialize(std::istream& in)
@@ -294,4 +295,5 @@ void BGC::deserialize(std::istream& in)
 	GF2E::init(f);
 	::deserialize(in, g);
 	::deserialize(in, L);
+	::deserialize(in, gen);
 }
