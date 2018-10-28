@@ -1,5 +1,6 @@
 #include "binom.hpp"
 #include "helper.hpp"
+#include "printer.hpp"
 
 #include <cassert>
 #include <NTL/ZZ.h>
@@ -14,32 +15,38 @@ static ZZ fac(long x)
 		return x *fac(x -1);
 }
 
-static ZZ binom(ZZ const& n, ZZ k)
+ZZ Binom::coeff(ZZ const& n, ZZ k)
 {
-	if (k == ZZ::zero())
+	if (k > n)
+		throw std::invalid_argument("Binomial coefficient (n k), k was greater than n");
+
+	if (IsZero(k))
 		return ZZ(1);
 	if (2 *k > n)
-		sub(k, n, k); // k = n -k;
+		sub(k, n, k);
 
-	ZZ res;
+	ZZ res(1);
 
 	for (ZZ i = ZZ(1); i <= k; ++i)
 	{
-		res *= (n -k +i) /i;
+		mul(res, res, n -k +i);
+		div(res, res, i);
 	}
 
 	return res;
 }
 
-void Binom::encode(long const n, long const t, char const* data, vec_GF2& out)
+void Binom::encode(long const n, long const t, ZZ x, vec_GF2& out)
 {
-	ZZ c, i = binom(ZZ(n), ZZ(t));
-	ZZFromBytes(c, reinterpret_cast<unsigned char const*>(data), n);
+	if (n < t)
+		std::invalid_argument("n < t");
 
-	if (i >= c)
+	ZZ c = coeff(ZZ(n), ZZ(t));
+	//ZZFromBytes(x, reinterpret_cast<unsigned char const*>(data), n);
+
+	out = vec_GF2(INIT_SIZE, n);
+	if (x >= c)
 		throw std::invalid_argument("Value too large");
-
-	out.SetLength(n);
 
 	long nn = n,
 		 tt = t;
@@ -50,10 +57,10 @@ void Binom::encode(long const n, long const t, char const* data, vec_GF2& out)
 		div(c, c, nn);
 		--nn;
 
-		if (c <= i)
+		if (c <= x)
 		{
 			out.put(j, 1);
-			sub(i, i, c);
+			sub(x, x, c);
 			--tt;
 
 			if (nn == tt)
@@ -65,25 +72,71 @@ void Binom::encode(long const n, long const t, char const* data, vec_GF2& out)
 			}
 		}
 	}
+
+	assert(IsZero(x));
+	assert(! tt);
+}
+
+void Binom::decode(const long n, const long t, const vec_GF2& in, ZZ& out)
+{
+	char* enc;
+	decode(n, t, in, enc);
+
+	ZZFromBytes(out, reinterpret_cast<unsigned char*>(enc), n);
+	free(enc);
 }
 
 ///
 /// https://www.cayrel.net/IMG/pdf/hymes_cw_buescher_meub.pdf
-/// page 10 (paragraph 3.1)
+///	paragraph 3.1
 ///
-void Binom::decode(long const n, long const t, vec_GF2 const& data, char*& out, long& size_bytes)
+void Binom::decode(long const n, long const t, vec_GF2 const& data, char*& out)
 {
 	assert(n == data.length());
-	assert(t == width(data));
-	ZZ res;
+	assert(width(data) == t);
 
-	for (long i = 0; i < t; ++i)
+	ZZ bc = coeff(ZZ(n), ZZ(t));
+	ZZ d = ZZ(0);
+
+	long nn = n,
+		 tt = t;
+
+	for (long i = 0; i < n; ++i)
+	{
+		bc = (bc *(nn -tt)) /nn;
+		--nn;
+
+		if (IsOne(data[i]))
+		{
+			d = d +bc;
+			--tt;
+
+			if (nn == tt)
+				bc = ZZ(1);
+			else
+				bc = (bc *(tt +1)) /(nn -tt);
+		}
+	}
+
+	out = new char[n]();
+	BytesFromZZ(reinterpret_cast<unsigned char*>(out), d, n);
+	/*ZZ res = ZZ::zero();
+
+	long tt = 0;
+	for (long i = 0; i < n; ++i)
 		if (! IsZero(data[i]))
-			res += binom(ZZ(i), ZZ(i +1));
+			res += coeff(ZZ(i), ZZ(++tt));
 
-	long size_bits = NumBits(res);
-	size_bytes = size_bits /8;
-	assert(size_bits % sizeof(char) == 0 && "Im not going to return sub byte data");
-	out = new char[size_bytes];
-	BytesFromZZ(reinterpret_cast<unsigned char*>(out), res, size_bytes);
+	assert(tt == t);
+	out = new char[n];
+	BytesFromZZ(reinterpret_cast<unsigned char*>(out), res, n);*/
 }
+
+void Binom::encode(const long n, const long t, char const* data, vec_GF2& out)
+{
+	ZZ x;
+	ZZFromBytes(x, reinterpret_cast<unsigned char const*>(data), n);
+
+	encode(n, t, x, out);
+}
+
