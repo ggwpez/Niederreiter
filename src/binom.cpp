@@ -132,10 +132,10 @@ void Binom::decode(long const n, long const t, vec_GF2 const& data, char*& out)
 	BytesFromZZ(reinterpret_cast<unsigned char*>(out), res, n);*/
 }
 
-void Binom::encode(const long n, const long t, char const* data, vec_GF2& out)
+void Binom::encode(const long n, const long t, char const* data, long const data_l, vec_GF2& out)
 {
 	ZZ x;
-	ZZFromBytes(x, reinterpret_cast<unsigned char const*>(data), n);
+	ZZFromBytes(x, reinterpret_cast<unsigned char const*>(data), data_l);
 
 	encode(n, t, x, out);
 }

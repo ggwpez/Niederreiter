@@ -218,11 +218,12 @@ int main(int argc, char** argv)
 		{
 			state.key->m_pk.deserialize(fs);
 
+			uint32_t ml = (state.key->m_pk.bits /8);
 			NTL::vec_GF2 err, enc_err;
-			char* msg = new char[state.key->m_pk.n +1]();
-			state.is->readsome(msg, state.key->m_pk.n);
+			char* msg = new char[ml +1]();
+			state.is->read(msg, ml);
 
-			Binom::encode(state.key->m_pk.n, state.key->m_pk.t, msg, err);
+			Binom::encode(state.key->m_pk.n, state.key->m_pk.t, msg, ml, err);
 			NCS::encode(err, state.key->m_pk, enc_err);
 
 			::serialize(std::cout, enc_err);
@@ -257,6 +258,7 @@ int main(int argc, char** argv)
 			std::cout << "PK-info not yet implemented" << std::endl
 					  << "sha256sum "; std::cout.flush();
 			system((std::string("sha256sum ") +state.path_key).c_str());
+			std::cout << (state.key->m_pk.bits /8) << " byte" << std::endl;
 		}
 		else if (state.mode == mCPK)							// CPK
 		{
@@ -266,8 +268,7 @@ int main(int argc, char** argv)
 			state.key->m_pk.serialize(std::cout);
 		}
 		else
-			throw std::runtime_error("Unreachable");	//SetSeed(ZZ(123));	// FIXME use secure random stream
-
+			throw std::runtime_error("Unreachable");
 	}
 	else
 	{
@@ -278,7 +279,7 @@ int main(int argc, char** argv)
 	std::cout.flush();
 	return 0;
 
-	int const m = 10,
+	/*int const m = 10,
 			  n = (1 << m),	// 8192
 			  t = 30;
 
@@ -294,7 +295,7 @@ int main(int argc, char** argv)
 	// Create a random message that we want to send
 	{
 		msg = new char[n]();
-		//ZZ x = ; /*conv<ZZ>(Binom::coeff(ZZ(n), ZZ(t)) -1);*///RandomBits_ZZ(879);
+		//ZZ x = ; /*conv<ZZ>(Binom::coeff(ZZ(n), ZZ(t)) -1);///RandomBits_ZZ(879);
 		//std::cout << "Testing with\n" << x << '\n';
 		//BytesFromZZ(reinterpret_cast<unsigned char*>(msg), x, n);		// FIXME
 		std::strcpy(msg, "TEST DATA\n");
@@ -322,7 +323,7 @@ int main(int argc, char** argv)
 		throw std::runtime_error("Decoding error");
 
 	delete msg;
-	return 0;
+	return 0;*/
 }
 
 void print_help()

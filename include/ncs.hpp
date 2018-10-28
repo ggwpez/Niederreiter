@@ -27,7 +27,7 @@ namespace NCS
 		PubKey(NTL::mat_GF2 const& h, uint32_t n, uint32_t t);
 
 		NTL::mat_GF2 h;
-		uint32_t n, t;
+		uint32_t n, t, bits;
 
 		virtual void serialize(std::ostream&) const override;
 		virtual void deserialize(std::istream&) override;
