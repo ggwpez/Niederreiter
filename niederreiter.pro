@@ -37,3 +37,6 @@ QMAKE_LIBS += -lntl -lgmp -lm -lpthread
 QMAKE_CXXFLAGS_DEBUG += -DDEBUG -DNTL_RANGE_CHECK
 QMAKE_CXXFLAGS_RELEASE += -Wall -march=native -msse4.2 -mpopcnt
 #-Werror
+
+GIT_OUTPUT=$$system(git rev-parse --short HEAD)
+DEFINES += GIT_HASH='0x$$GIT_OUTPUT'

@@ -6,7 +6,7 @@
 std::string print_x_power(long i)
 {
 	if (! i)
-		return std::string();
+		return std::string("1");
 	else if (i == 1)
 		return std::string("x");
 	else
@@ -24,9 +24,9 @@ std::string print(NTL::GF2X const& p)
 	std::ostringstream ss;
 	bool place_plus = false;
 
-	for (int i = NTL::deg(p); i --> 0;)
+	for (long i = NTL::deg(p); i >= 0; --i)
 	{
-		NTL::GF2 c = NTL::coeff(p, i);
+		NTL::GF2 c = p[i];
 		if (place_plus && ! NTL::IsZero(c))
 		{
 			ss << " +";
@@ -97,9 +97,9 @@ std::string print(NTL::GF2EX const& p)
 	std::ostringstream ss;
 	bool place_plus = false;
 
-	for (int i = NTL::deg(p); i --> 0;)
+	for (long i = NTL::deg(p); i > 0; --i)
 	{
-		NTL::GF2E c = NTL::coeff(p, i);
+		NTL::GF2E c = p[i];
 		if (place_plus && ! NTL::IsZero(c))
 		{
 			ss << " +";
