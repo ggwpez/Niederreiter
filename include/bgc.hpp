@@ -20,7 +20,7 @@ class BGC : public ISerializable
 {
 public:
 	BGC() = default;
-	BGC(long m, long n, long t, NTL::GF2X const& f, NTL::GF2EX const& g, const NTL::GF2E& gen, support_t const& L, const NTL::mat_GF2& H);
+	BGC(uint32_t m, uint32_t n, uint32_t t, NTL::GF2X const& f, NTL::GF2EX const& g, const NTL::GF2E& gen, support_t const& L, const NTL::mat_GF2& H);
 
 	static BGC create(long m, long n, long t);
 	static BGC create_with_field(long m, long n, long t, NTL::GF2X const& f);

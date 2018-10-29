@@ -34,10 +34,6 @@ NCS::KeyPair NCS::keygen(BGC const& bgc)
 
 void NCS::encode(NTL::vec_GF2 const& msg, NCS::PubKey const& key, NTL::vec_GF2& cipher)
 {
-
-	//mat_GF2 H = mat_merge_ID_left(key.h);	// TODO
-
-	//mul(cipher, H, msg);
 	mat_mul_right_compact(key.h, msg, cipher);
 }
 

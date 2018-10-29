@@ -15,7 +15,7 @@ Tested with [ntl-11.1.0](http://www.shoup.net/ntl/ntl-11.1.0.tar.gz) https-rehos
 Build it with the following commands, extracted from [here](http://www.shoup.net/ntl/doc/tour-unix.html):  
 
 `gunzip ntl-11.1.0.tar.gz`  
-`tar xf ntl-11.1.0.tar`  
+`tar xf ntl-11.1.0.tar.gz`
 `cd ntl-11.1.0/src`  
 `./configure`  
 `make`  

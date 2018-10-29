@@ -15,7 +15,8 @@ SOURCES += \
 	src/hasher.cpp \
 	src/ncs.cpp \
 	src/binom.cpp \
-	src/serializer.cpp
+	src/serializer.cpp \
+	src/arg_parse.cpp
 
 HEADERS += \
 	include/printer.hpp \
@@ -28,7 +29,8 @@ HEADERS += \
 	include/ncs.hpp \
 	include/binom.hpp \
 	include/serializable.hpp \
-	include/serializer.hpp
+	include/serializer.hpp \
+	include/arg_parse.hpp
 
 INCLUDEPATH += include/
 
