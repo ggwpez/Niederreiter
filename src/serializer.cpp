@@ -2,6 +2,16 @@
 
 using namespace NTL;
 
+void serialize(std::ostream& out, const uint16_t& val)
+{
+	out.write(reinterpret_cast<char const*>(std::addressof(val)), 2);
+}
+
+void deserialize(std::istream& in, uint16_t& val)
+{
+	in.read(reinterpret_cast<char*>(std::addressof(val)), 2);
+}
+
 void serialize(std::ostream& out, const uint32_t& val)
 {
 	out.write(reinterpret_cast<char const*>(std::addressof(val)), 4);
@@ -176,7 +186,7 @@ void deserialize(std::istream& in, GF2X& val)
 //
 void serialize(std::ostream& out, const GF2EX& val)
 {
-	serialize(out, deg(val));
+	serialize(out, uint32_t(deg(val)));
 
 	for (int i = 0; i <= deg(val); ++i)
 		serialize(out, val[i]);
@@ -192,9 +202,11 @@ void deserialize(std::istream& in, GF2EX& val)
 		deserialize(in, val[i]);
 }
 
+template void serialize<uint16_t>(std::ostream& out, NTL::Vec<uint16_t> const&);
 template void serialize<NTL::GF2E>(std::ostream& out, NTL::Vec<NTL::GF2E> const&);
 template void serialize<NTL::GF2EX>(std::ostream& out, NTL::Vec<NTL::GF2EX> const&);
 
+template void deserialize<uint16_t>(std::istream&, NTL::Vec<uint16_t>&);
 template void deserialize<NTL::GF2E>(std::istream&, NTL::Vec<NTL::GF2E>&);
 template void deserialize<NTL::GF2EX>(std::istream&, NTL::Vec<NTL::GF2EX>&);
 

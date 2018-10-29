@@ -40,16 +40,6 @@ GF2EX monic(GF2EX const& poly)
 	return ret;
 }
 
-mat_GF2 create_rand_permutation(size_t s)
-{
-	mat_GF2 ret;
-
-	ident(ret, s);
-	std::random_shuffle(ret._mat__rep.begin(), ret._mat__rep.end());
-
-	return ret;
-}
-
 // Horner schema
 GF2E call(GF2EX const& p, GF2E const& x)
 {
@@ -57,7 +47,6 @@ GF2E call(GF2EX const& p, GF2E const& x)
 
 	for (long i = deg(p); i --> 0;)
 	{
-		//result = (result *x) +coeff(p, i);
 		mul(result, result, x);
 		add(result, result, coeff(p, i));
 	}
@@ -104,6 +93,7 @@ inline bool is_power_of_two(T const& x)
 
 GF2 fast_dot_product(vec_GF2 const& a, vec_GF2 const& b)
 {
+	assert(a.length() == b.length());
 	GF2 ret = GF2::zero();
 
 	for (long i = 0; i < a.rep.length(); ++i)
@@ -133,7 +123,7 @@ void mat_mul_right_compact(mat_GF2 const& mat, vec_GF2 const& vec, vec_GF2& out)
 		out[i] = fast_dot_product(mat[i], vec2);
 
 		if (IsOne(vec[i]))
-			out[i] = GF2(1) -out[i];
+			inv(out[i], out[i]);
 	}
 }
 
@@ -217,7 +207,7 @@ long count_coefficients(GF2EX& p, const GF2E& e)
 
 	for (long i = 0; i < deg(p); ++i)
 		if (coeff(p, i) == e)
-		++sum;
+			++sum;
 
 	return sum;
 }

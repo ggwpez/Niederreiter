@@ -6,7 +6,7 @@
 
 using namespace NTL;
 
-void NCS::compute_systematic_form(mat_GF2 const& H, mat_GF2& sInv, mat_GF2& m, mat_GF2& p)
+void NCS::compute_systematic_form(mat_GF2 const& H, mat_GF2& sInv, mat_GF2& m, perm_GF2& p)
 {
 	size_t n = size_t(H.NumCols());
 	mat_GF2 hp;
@@ -24,7 +24,8 @@ void NCS::compute_systematic_form(mat_GF2 const& H, mat_GF2& sInv, mat_GF2& m, m
 
 NCS::KeyPair NCS::keygen(BGC const& bgc)
 {
-	mat_GF2 sInv, m, p;
+	perm_GF2 p;
+	mat_GF2 sInv, m;
 
 	//mat_GF2 H = bgc.H; // CHANGED
 	NCS::compute_systematic_form(bgc.H, sInv, m, p);
@@ -34,10 +35,6 @@ NCS::KeyPair NCS::keygen(BGC const& bgc)
 
 void NCS::encode(NTL::vec_GF2 const& msg, NCS::PubKey const& key, NTL::vec_GF2& cipher)
 {
-
-	//mat_GF2 H = mat_merge_ID_left(key.h);	// TODO
-
-	//mul(cipher, H, msg);
 	mat_mul_right_compact(key.h, msg, cipher);
 }
 

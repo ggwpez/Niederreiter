@@ -97,7 +97,7 @@ std::string print(NTL::GF2EX const& p)
 	std::ostringstream ss;
 	bool place_plus = false;
 
-	for (long i = NTL::deg(p); i > 0; --i)
+	for (long i = NTL::deg(p); i >= 0; --i)
 	{
 		NTL::GF2E c = p[i];
 		if (place_plus && ! NTL::IsZero(c))

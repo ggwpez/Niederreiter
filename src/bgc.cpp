@@ -17,7 +17,7 @@
 
 using namespace NTL;
 
-BGC::BGC(long m, long n, long t, GF2X const& f, GF2EX const& g, GF2E const& gen, support_t const& L, mat_GF2 const& H)
+BGC::BGC(uint32_t m, uint32_t n, uint32_t t, GF2X const& f, GF2EX const& g, GF2E const& gen, support_t const& L, mat_GF2 const& H)
 	: m(m), n(n), t(t), f(f), g(g), gen(gen), L(L), H(H)
 {
 
@@ -64,21 +64,11 @@ void BGC::calculate_f(long m, GF2X& f)
 void BGC::calculate_g(long t, GF2EX& g)
 {
 	GF2EX tmp = BuildIrred_GF2EX(t);
-#if DEBUG
-	long tries = 0;
-#endif
 	do
 	{
 		BuildRandomIrred(g, tmp);
-#if DEBUG
-		++tries;
-#endif
 	} while (count_coefficients(g, GF2E::zero()) > 1				// Not more than one 0 coefficient
 		  && count_coefficients(g, conv<GF2E>("[1]")) == deg(g));	// Not all coefficients should be one
-#if DEBUG
-	if (tries > 1)
-		std::clog << "Tries for g: " << tries << std::endl;
-#endif
 }
 
 void BGC::calculate_gen(GF2X f, GF2E& gen)
@@ -136,17 +126,50 @@ void BGC::check_args(long m, long n, long t, GF2X const& f, GF2EX const& g)
 		throw std::invalid_argument("g");
 }
 
-void BGC::calculate_error(GF2EX const& poly, vec_GF2& e) const
+void BGC::calculate_error(GF2EX poly, vec_GF2& e) const
 {
+	int f = 0, m = deg(poly);
 	e.SetLength(n);
 
+	GF2EX h;
+	SetCoeff(h, 0, 0);
+	SetCoeff(h, 1, 1);
 	// TODO speedup
 	for (long i = 0; i < e.length(); ++i)
 	{
-		GF2E y = call(poly, L[i]);
+		GF2E y = eval(poly, L[i]);
 		if (IsZero(y))
+		{
 			e[i] = GF2(1);
+			if (++f >= m)
+				break;
+			else
+			{
+				SetCoeff(h, 0, -L[i]);
+				//std::cerr << print(h) << '\n';
+				div(poly, poly, h);
+			}
+		}
 	}
+
+	/*vec_GF2E res;
+	FindRoots(res, poly);
+
+	for (int i = 0; i < res.length(); ++i)
+	{
+		auto x = res[i];
+		auto it = std::find(L.begin(), L.end(), x);
+
+		if (it == L.end())
+			throw 2;
+		else
+		{
+			e[it -L.begin()] = 1;
+
+			if (++f >= m)
+				break;
+		}
+	}*/
 }
 
 void BGC::calculate_sc(vec_GF2 const& c, GF2EX& sc) const

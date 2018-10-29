@@ -52,5 +52,5 @@ namespace NCS
 	void decode(NTL::vec_GF2 const&, SecKey const&, NTL::vec_GF2&);
 
 	// You dont need to call this
-	void compute_systematic_form(NTL::mat_GF2 const& H, NTL::mat_GF2& sInv, NTL::mat_GF2& m, NTL::mat_GF2& p);
+	void compute_systematic_form(NTL::mat_GF2 const& H, NTL::mat_GF2& sInv, NTL::mat_GF2& m, perm_GF2& p);
 }

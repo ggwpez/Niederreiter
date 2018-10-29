@@ -20,7 +20,7 @@ class BGC : public ISerializable
 {
 public:
 	BGC() = default;
-	BGC(long m, long n, long t, NTL::GF2X const& f, NTL::GF2EX const& g, const NTL::GF2E& gen, support_t const& L, const NTL::mat_GF2& H);
+	BGC(uint32_t m, uint32_t n, uint32_t t, NTL::GF2X const& f, NTL::GF2EX const& g, const NTL::GF2E& gen, support_t const& L, const NTL::mat_GF2& H);
 
 	static BGC create(long m, long n, long t);
 	static BGC create_with_field(long m, long n, long t, NTL::GF2X const& f);
@@ -57,7 +57,7 @@ public:
 	void calculate_sc(NTL::vec_GF2 const& c, NTL::GF2EX& sc) const;
 	void calculate_vc(NTL::GF2EX const& sc, NTL::GF2EX& vc) const;
 
-	void calculate_error(NTL::GF2EX const& poly, NTL::vec_GF2& e) const;
+	void calculate_error(NTL::GF2EX poly, NTL::vec_GF2& e) const;
 
 	// L[a] * L[b]
 	size_t mul_L_elements(size_t a, size_t b) const;
