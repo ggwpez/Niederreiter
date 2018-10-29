@@ -126,19 +126,33 @@ void BGC::check_args(long m, long n, long t, GF2X const& f, GF2EX const& g)
 		throw std::invalid_argument("g");
 }
 
-void BGC::calculate_error(GF2EX const& poly, vec_GF2& e) const
+void BGC::calculate_error(GF2EX poly, vec_GF2& e) const
 {
+	int f = 0, m = deg(poly);
 	e.SetLength(n);
 
+	GF2EX h;
+	SetCoeff(h, 0, 0);
+	SetCoeff(h, 1, 1);
 	// TODO speedup
-	/*for (long i = 0; i < e.length(); ++i)
+	for (long i = 0; i < e.length(); ++i)
 	{
-		GF2E y = call(poly, L[i]);
+		GF2E y = eval(poly, L[i]);
 		if (IsZero(y))
+		{
 			e[i] = GF2(1);
-	}*/
+			if (++f >= m)
+				break;
+			else
+			{
+				SetCoeff(h, 0, -L[i]);
+				//std::cerr << print(h) << '\n';
+				div(poly, poly, h);
+			}
+		}
+	}
 
-	vec_GF2E res;
+	/*vec_GF2E res;
 	FindRoots(res, poly);
 
 	for (int i = 0; i < res.length(); ++i)
@@ -150,10 +164,12 @@ void BGC::calculate_error(GF2EX const& poly, vec_GF2& e) const
 			throw 2;
 		else
 		{
-			auto p = it -L.begin();
-			e[p] = 1;
+			e[it -L.begin()] = 1;
+
+			if (++f >= m)
+				break;
 		}
-	}
+	}*/
 }
 
 void BGC::calculate_sc(vec_GF2 const& c, GF2EX& sc) const

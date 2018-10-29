@@ -34,10 +34,11 @@ HEADERS += \
 
 INCLUDEPATH += include/
 
-QMAKE_CXXFLAGS += -std=c++11
-QMAKE_LIBS += -lntl -lgmp -lm -lpthread
+#QMAKE_CXXFLAGS += -std=c++11
+QMAKE_LIBS += -lntl -lpthread -lgmp
 QMAKE_CXXFLAGS_DEBUG += -DDEBUG -DNTL_RANGE_CHECK
 QMAKE_CXXFLAGS_RELEASE += -Wall -march=native -msse4.2 -mpopcnt
+#QMAKE_LFLAGS += -static
 #-Werror
 
 GIT_OUTPUT=$$system(git rev-parse --short HEAD)

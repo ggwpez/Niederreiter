@@ -15,8 +15,6 @@ NTL::GF2E call(NTL::GF2EX const& p, NTL::GF2E const& x);
 void monic(NTL::GF2EX poly, NTL::GF2EX& ret);
 NTL::GF2EX monic(NTL::GF2EX const&poly);
 
-NTL::mat_GF2 create_rand_permutation(size_t s);
-
 NTL::mat_GF2 getLeftSubMatrix(NTL::mat_GF2 const& mat);
 NTL::mat_GF2 getRightSubMatrix(NTL::mat_GF2 const& mat);
 

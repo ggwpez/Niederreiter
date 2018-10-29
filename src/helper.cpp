@@ -40,16 +40,6 @@ GF2EX monic(GF2EX const& poly)
 	return ret;
 }
 
-mat_GF2 create_rand_permutation(size_t s)
-{
-	mat_GF2 ret;
-
-	ident(ret, s);
-	std::random_shuffle(ret._mat__rep.begin(), ret._mat__rep.end());
-
-	return ret;
-}
-
 // Horner schema
 GF2E call(GF2EX const& p, GF2E const& x)
 {
