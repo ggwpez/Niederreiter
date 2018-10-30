@@ -1,21 +1,21 @@
 ### Requirements
 
-I assume you have GNU Make and a C++ compiler able to compile C++11.
+I assume you have GNU Make and a C++11 compiler.
 
 #### qmake
 
 `sudo apt install qt4-qmake`
 
-CMake support comes soon.
+Later versions also work.
 
 #### NTL
 
-Needed for making calculations in Finite Fields.  
+Needed for calculating in Finite Fields.  
 Tested with [ntl-11.1.0](http://www.shoup.net/ntl/ntl-11.1.0.tar.gz) https-rehosted [here](https://tasty.limo//random/ntl-11.1.0.tar.gz), [other versions](http://www.shoup.net/ntl/download.html).  
 Build it with the following commands, extracted from [here](http://www.shoup.net/ntl/doc/tour-unix.html):  
 
 `gunzip ntl-11.1.0.tar.gz`  
-`tar xf ntl-11.1.0.tar`  
+`tar xf ntl-11.1.0.tar.gz`  
 `cd ntl-11.1.0/src`  
 `./configure`  
 `make`  
