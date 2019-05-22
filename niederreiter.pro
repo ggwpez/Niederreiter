@@ -36,10 +36,10 @@ INCLUDEPATH += include/
 
 #QMAKE_CXXFLAGS += -std=c++11
 QMAKE_LIBS += -lntl -lpthread -lgmp
-QMAKE_CXXFLAGS_DEBUG += -DDEBUG -DNTL_RANGE_CHECK
+QMAKE_CXXFLAGS_DEBUG += -DDEBUG -DNTL_RANGE_CHECK -g3
 QMAKE_CXXFLAGS_RELEASE += -Wall -march=native -msse4.2 -mpopcnt
-#QMAKE_LFLAGS += -static
+#QMAKE_LFLAGS += -fuse-ld=gold
 #-Werror
-
+#QMAKE_CXXFLAGS -= -fPIC
 GIT_OUTPUT=$$system(git rev-parse --short HEAD)
 DEFINES += GIT_HASH='0x$$GIT_OUTPUT'

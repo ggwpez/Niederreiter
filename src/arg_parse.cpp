@@ -10,15 +10,17 @@
 static struct option long_options[] =
 {
 	/* Flags */
-	{ "help",	    no_argument, nullptr, 'h' },
+	{ "help",			no_argument, nullptr, 'h' },
 	{ "version",	no_argument, nullptr, 'v' },
 
-	{ "gen",		no_argument, nullptr, 'g' },
-	{ "enc",		no_argument, nullptr, 'e' },
-	{ "dec",		no_argument, nullptr, 'd' },
-	{ "cpk",		no_argument, nullptr, 'c' },
-	{ "sk-info",	no_argument, nullptr, 's' },
-	{ "pk-info",	no_argument, nullptr, 'p' },
+	{ "gen",		no_argument, nullptr, mGEN },
+	{ "enc",		no_argument, nullptr, mENC },
+	{ "dec",		no_argument, nullptr, mDEC },
+	{ "sig",		no_argument, nullptr, mSIG },
+	{ "sfy",		no_argument, nullptr, mSFY },
+	{ "cpk",		no_argument, nullptr, mCPK },
+	{ "sk-info",	no_argument, nullptr, mSINF },
+	{ "pk-info",	no_argument, nullptr, mPINF },
 
 	{ "seed",		required_argument, nullptr, kSEED },
 	{ "mode",		required_argument, nullptr, kMODE },
@@ -62,7 +64,7 @@ state_t parse_args(int argc, char** argv)
 				print_version();
 				exit(0);
 			}
-			case mGEN: case mENC: case mDEC: case mCPK: case mSINF: case mPINF:
+			case mGEN: case mENC: case mDEC: case mCPK: case mSINF: case mPINF: case mSIG: case mSFY:
 			{
 				state.mode = c;
 			} break;
@@ -125,15 +127,15 @@ void print_help()
 		<< "Example for file 'msg':" << std::endl
 		<< " ./niederreiter --gen -m10 -n1024 -t30 > key.sk" << std::endl
 		<< " ./niederreiter --cpk --key=key.sk > key.pk" << std::endl
-		<< " ./niederreiter --enc --input=msg     --key=key.pk > msg.enc" << std::endl
+		<< " ./niederreiter --enc --input=msg		 --key=key.pk > msg.enc" << std::endl
 		<< " ./niederreiter --dec --input=msg.enc --key=key.sk" << std::endl
 		<< "Explanation:" << std::endl
 		<< " 1: Generate secret key and write to key.sk" << std::endl
-		<< "    The arguments m,n,t are the security parameter λ" << std::endl
+		<< "		The arguments m,n,t are the security parameter λ" << std::endl
 		<< " 2: Calculate public key from key.sk and write to key.pk" << std::endl
 		<< " 3: Encrypt the file 'msg' and write cipher to msg.enc" << std::endl
 		<< " 4: Decrypt msg from msg.enc and write to cout" << std::endl
-		<< "    The output should match msg, if it wasnt too long" << std::endl
+		<< "		The output should match msg, if it wasnt too long" << std::endl
 	;
 }
 

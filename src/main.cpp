@@ -51,6 +51,18 @@ int main(int argc, char** argv)
 
 		decode(keys.m_sk);
 	}
+	else if (state.mode == mSIG)
+	{
+		keys.m_sk.deserialize(fs);
+
+		//sign(keys.m_sk);
+	}
+	else if (state.mode == mSFY)
+	{
+		keys.m_pk.deserialize(fs);
+
+	//	sig_verify(keys.m_sk);
+	}
 	else if (state.mode == mSINF)
 	{
 		keys.m_sk.deserialize(fs);
@@ -120,6 +132,20 @@ void decode(const NCS::SecKey& key)
 
 	std::cout << msg;
 	delete [] msg;
+}
+
+void sign(const NCS::SecKey& key)
+{
+	/*NTL::vec_GF2 err, enc_err;
+
+	uint32_t ml = (key.bits /8);
+	char* msg = new char[ml +1]();
+	state.is->read(msg, ml);*/
+}
+
+void sig_verify(const NCS::PubKey& key)
+{
+
 }
 
 std::ifstream open_key()

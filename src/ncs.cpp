@@ -70,7 +70,7 @@ void NCS::SecKey::deserialize(std::istream& in)
 }
 
 NCS::PubKey::PubKey(const mat_GF2& h, uint32_t n, uint32_t t)
-		  : h(h), n(n), t(t), bits(log2_coeff(n,t))
+			: h(h), n(n), t(t), bits(log2_coeff(n,t))
 {
 
 }

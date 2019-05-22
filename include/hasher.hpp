@@ -56,7 +56,7 @@ namespace std
 	{
 		size_t operator()(NTL::GF2E const& x) const
 		{
-			return std::hash<NTL::GF2X>()(const_cast<NTL::GF2E&>(x).LoopHole());  // LoopHole() has no const overload, thanks NTL man
+			return std::hash<NTL::GF2X>()(const_cast<NTL::GF2E&>(x).LoopHole());	// LoopHole() has no const overload, thanks NTL man
 		}
 	};
 

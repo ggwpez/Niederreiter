@@ -32,7 +32,7 @@ int test_binom_val(long const n, long const t, ZZ x)
 int test_binom()
 {
 	long const n = 8192,
-			   t = 117;
+				 t = 117;
 	long k = log2_coeff(n, t);
 	ZZ biggest = Binom::coeff(ZZ(n), ZZ(t)) -1;
 

@@ -24,7 +24,7 @@ void deserialize(std::istream& in, uint32_t& val)
 
 void serialize(std::ostream& out, const ZZ& val)
 {
-	uint32_t len  = uint32_t(NumBytes(val)),
+	uint32_t len	= uint32_t(NumBytes(val)),
 			 size = uint32_t(val.size());
 	serialize(out, size);
 	serialize(out, len);
@@ -157,7 +157,7 @@ void deserialize(std::istream& in, GF2E& val)
 //
 void serialize(std::ostream& out, const GF2X& val)
 {
-	uint32_t len  = uint32_t(NumBytes(val)),
+	uint32_t len	= uint32_t(NumBytes(val)),
 			 size = uint32_t(deg(val));
 	serialize(out, size);
 	serialize(out, len);

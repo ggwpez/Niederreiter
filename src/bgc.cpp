@@ -68,7 +68,7 @@ void BGC::calculate_g(long t, GF2EX& g)
 	{
 		BuildRandomIrred(g, tmp);
 	} while (count_coefficients(g, GF2E::zero()) > 1				// Not more than one 0 coefficient
-		  && count_coefficients(g, conv<GF2E>("[1]")) == deg(g));	// Not all coefficients should be one
+			&& count_coefficients(g, conv<GF2E>("[1]")) == deg(g));	// Not all coefficients should be one
 }
 
 void BGC::calculate_gen(GF2X f, GF2E& gen)
@@ -282,12 +282,12 @@ std::string BGC::to_str() const
 	std::ostringstream ss;
 
 	ss << "[n,k,d]-Code = [" << (uint64_t(1) << m) << ',' << k() << ',' << (2*t +1) << "]" << std::endl
-	   << "Message length = " << l() << " bits, user data per message = " << encoded_bits() << " bits, overhead = " << (1 -encoded_bits_density()) *100 << '%' << std::endl
-	   << "F(2^" << m << "): " << "F(2)[x]/" << print(f) << std::endl
-	   << "Goppa Polynomial:\n" << print(g) << std::endl
-	   << "Generator: " << print(gen) << std::endl
-	   << "L: { " << print(L) << " }" << std::endl
-	   << "Dim(H): " << H.NumRows() << 'x' << H.NumCols();
+		 << "Message length = " << l() << " bits, user data per message = " << encoded_bits() << " bits, overhead = " << (1 -encoded_bits_density()) *100 << '%' << std::endl
+		 << "F(2^" << m << "): " << "F(2)[x]/" << print(f) << std::endl
+		 << "Goppa Polynomial:\n" << print(g) << std::endl
+		 << "Generator: " << print(gen) << std::endl
+		 << "L: { " << print(L) << " }" << std::endl
+		 << "Dim(H): " << H.NumRows() << 'x' << H.NumCols();
 
 	return ss.str();
 }

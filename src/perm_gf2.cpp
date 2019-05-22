@@ -30,7 +30,7 @@ void mul(NTL::mat_GF2& out, const NTL::mat_GF2& mat, const perm_GF2& perm)
 {
 	out.SetDims(mat.NumRows(), mat.NumCols());
 	std::cerr << mat.NumRows() << "x" << mat.NumCols() << '\n'
-			  << perm.length() << '\n';
+				<< perm.length() << '\n';
 	assert(mat.NumCols() == perm.length());
 	for (int i = 0; i < mat.NumRows(); ++i)
 	{
