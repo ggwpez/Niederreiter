@@ -41,16 +41,23 @@ namespace NCS
 		SecKey m_sk;
 		PubKey m_pk;
 
-		void reconstruct_pk();
+		void reconstruct_pk_systematic();
+		void reconstruct_pk_classic();
 
 		virtual void serialize(std::ostream&) const override;
 		virtual void deserialize(std::istream&) override;
 	};
 
-	KeyPair keygen(BGC const&);
-	void encode(NTL::vec_GF2 const&, PubKey const&, NTL::vec_GF2&);
+	KeyPair keygen_systematic(BGC const&);
+	KeyPair keygen_classic(BGC const&);
+
+	void encode_systematic(NTL::vec_GF2 const&, PubKey const&, NTL::vec_GF2&);
+	void encode_classic(NTL::vec_GF2 const&, PubKey const&, NTL::vec_GF2&);
+
 	void decode(NTL::vec_GF2 const&, SecKey const&, NTL::vec_GF2&);
 
 	// You dont need to call this
-	void compute_systematic_form(NTL::mat_GF2 const& H, NTL::mat_GF2& sInv, NTL::mat_GF2& m, perm_GF2& p);
+	void compute_systematic_form(NTL::mat_GF2 const& H, NTL::mat_GF2& sInv, NTL::mat_GF2& m, perm_GF2& P);
+	// https://arxiv.org/pdf/1312.4265.pdf
+	void compute_classic_form(NTL::mat_GF2 const& H, NTL::mat_GF2& sInv, NTL::mat_GF2& m, perm_GF2& p);
 }

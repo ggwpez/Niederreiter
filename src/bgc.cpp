@@ -49,7 +49,7 @@ BGC BGC::create_with_field_and_gp_poly(long m, long n, long t, GF2X const& f, GF
 	BGC bgc = BGC(m, n, t, f, g, GF2E::zero(), support_t(), mat_GF2());
 
 	calculate_gen(f, bgc.gen);
-	calculate_L(n, bgc.gen, bgc.L);
+	calculate_L(n, bgc.g, bgc.L);
 	calculate_H(t, bgc.L, bgc.g, bgc.H);
 
 	return bgc;
@@ -101,15 +101,33 @@ void BGC::calculate_H(long t, support_t L, GF2EX const& g, mat_GF2& H)
 	trace_construct(h, H);
 }
 
-void BGC::calculate_L(long n, GF2E const& gen, support_t& L)
+void BGC::calculate_L(long n, GF2EX const& g, support_t& L)
 {
-	L.SetLength(n);
+	/*L.SetLength(n);
 	L[0] = gen;
 
 	for (long i = 1; i < L.length() -1; ++i)
 		L[i] = L[i -1] *gen;
 
-	L[L.length() -1] = 0;
+	L[L.length() -1] = 0;*/
+	while (L.length() < n)
+	{
+		auto tmp = NTL::random_GF2E();
+
+		if (IsZero(call(g, tmp)))
+			continue;
+
+		bool is_in = false;
+		for (auto const& c : L)
+			if (tmp == c)
+			{
+				is_in = true;
+				break;
+			}
+
+		if (!is_in)
+			L.append(tmp);
+	}
 }
 
 void BGC::check_args(long m, long n, long t, GF2X const& f, GF2EX const& g)

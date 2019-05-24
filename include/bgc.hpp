@@ -31,7 +31,7 @@ public:
 	static void calculate_gen(NTL::GF2X f, NTL::GF2E& gen);
 
 	static void calculate_H(long t, support_t L, NTL::GF2EX const& g, NTL::mat_GF2& H);
-	static void calculate_L(long n, NTL::GF2E const& gen, support_t& L);
+	static void calculate_L(long n, const NTL::GF2EX& g, support_t& L);
 
 	static void check_args(long m, long n, long t, NTL::GF2X const& f, NTL::GF2EX const& g);
 	// Parameter k of the Code

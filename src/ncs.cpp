@@ -6,15 +6,15 @@
 
 using namespace NTL;
 
-void NCS::compute_systematic_form(mat_GF2 const& H, mat_GF2& sInv, mat_GF2& m, perm_GF2& p)
+void NCS::compute_systematic_form(mat_GF2 const& H, mat_GF2& sInv, mat_GF2& m, perm_GF2& P)
 {
 	size_t n = size_t(H.NumCols());
 	mat_GF2 hp;
 
 	do
 	{
-		p = create_rand_permutation(n);
-		mul(hp, H, p);
+		P = create_rand_permutation(n);
+		mul(hp, H, P);
 		sInv = getLeftSubMatrix(hp);
 	} while (IsZero(determinant(sInv)));
 
@@ -22,20 +22,53 @@ void NCS::compute_systematic_form(mat_GF2 const& H, mat_GF2& sInv, mat_GF2& m, p
 	m = getRightSubMatrix(shp);
 }
 
-NCS::KeyPair NCS::keygen(BGC const& bgc)
+// Permuted Goppa Syndrome Decoding Problem
+// https://eprint.iacr.org/2019/544.pdf
+void NCS::compute_classic_form(mat_GF2 const& H, mat_GF2& sInv, mat_GF2& m, perm_GF2& P)
+{
+	size_t n  = size_t(H.NumCols());
+	long   nk = long(H.NumRows());
+	mat_GF2 S;
+
+	do
+	{
+		S = random_mat_GF2(nk, nk);
+	} while (IsZero(determinant(S)));
+	P = create_rand_permutation(n);
+
+	mul(m, H, P);
+	mul(m, S, m);
+	sInv = inv(S);
+}
+
+NCS::KeyPair NCS::keygen_systematic(BGC const& bgc)
 {
 	perm_GF2 p;
 	mat_GF2 sInv, m;
 
-	//mat_GF2 H = bgc.H; // CHANGED
 	NCS::compute_systematic_form(bgc.H, sInv, m, p);
 
 	return KeyPair{ SecKey{ sInv, p, bgc }, PubKey( m, bgc.n, bgc.t ) };
 }
 
-void NCS::encode(NTL::vec_GF2 const& msg, NCS::PubKey const& key, NTL::vec_GF2& cipher)
+NCS::KeyPair NCS::keygen_classic(BGC const& bgc)
+{
+	perm_GF2 p;
+	mat_GF2 sInv, m;
+
+	NCS::compute_classic_form(bgc.H, sInv, m, p);
+
+	return KeyPair{ SecKey{ sInv, p, bgc }, PubKey( m, bgc.n, bgc.t ) };
+}
+
+void NCS::encode_systematic(NTL::vec_GF2 const& msg, NCS::PubKey const& key, NTL::vec_GF2& cipher)
 {
 	mat_mul_right_compact(key.h, msg, cipher);
+}
+
+void NCS::encode_classic(NTL::vec_GF2 const& msg, NCS::PubKey const& key, NTL::vec_GF2& cipher)
+{
+	mul(cipher, key.h, msg);
 }
 
 void NCS::decode(NTL::vec_GF2 const& cipher, NCS::SecKey const& key, NTL::vec_GF2& msg)
@@ -98,7 +131,7 @@ NCS::KeyPair::KeyPair(const NCS::SecKey& sk, const NCS::PubKey& pk)
 
 }
 
-void NCS::KeyPair::reconstruct_pk()
+void NCS::KeyPair::reconstruct_pk_systematic()
 {
 	mat_GF2 hp;
 
@@ -106,6 +139,16 @@ void NCS::KeyPair::reconstruct_pk()
 	mat_GF2 shp = inv(m_sk.Si) *hp;
 
 	this->m_pk = PubKey(getRightSubMatrix(shp), m_sk.bgc.n, m_sk.bgc.t);
+}
+
+void NCS::KeyPair::reconstruct_pk_classic()
+{
+	mat_GF2 hp;
+
+	mul(hp, m_sk.bgc.H, m_sk.p);
+	mat_GF2 shp = inv(m_sk.Si) *hp;
+
+	this->m_pk = PubKey(shp, m_sk.bgc.n, m_sk.bgc.t);
 }
 
 void NCS::KeyPair::serialize(std::ostream&) const
